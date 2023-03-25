@@ -1,0 +1,28 @@
+{
+    "name": "svgta/oidc-client",
+    "description": "OpenId Connect Client for PHP",
+    "type": "library",
+    "require": {
+        "guzzlehttp/guzzle": "^7.5",
+        "web-token/jwt-core": "^3.1",
+        "web-token/jwt-key-mgmt": "^3.1",
+        "web-token/jwt-signature": "^3.1",
+        "web-token/jwt-signature-algorithm-hmac": "^3.1",
+        "web-token/jwt-signature-algorithm-ecdsa": "^3.1",
+        "web-token/jwt-signature-algorithm-rsa": "^3.1",
+        "web-token/jwt-signature-algorithm-eddsa": "^3.1",
+        "web-token/jwt-signature-algorithm-none": "^3.1"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Svgta\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Svgta",
+            "email": "svgta@live.com"
+        }
+    ]
+}
