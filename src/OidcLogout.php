@@ -8,8 +8,8 @@ class OidcLogout
   private $redirect_uri = null;
   private $session = null;
 
-  public function __construct($id_token = null, $redirect_uri = null){
-    $this->session = new OidcSession();
+  public function __construct(?string $id_token = null, ?string $redirect_uri = null, OidcSession $session){
+    $this->session = $session;
     if(!is_null($id_token))
       if(!is_string($id_token))
         throw new Exception('id_token must be a string');
@@ -24,12 +24,13 @@ class OidcLogout
     $this->id_token = $id_token;
     $this->redirect_uri = $redirect_uri;
   }
-  public function doLogout(){
+  public function doLogout(): void{
     OidcUtils::setDebug(__CLASS__, __FUNCTION__);
     $logoutUri = $this->getLogoutUri();
+    $this->session->clear();
     header('Location: ' . $logoutUri);
   }
-  public function getLogoutUri(){
+  public function getLogoutUri(): string{
     $fi_params = $this->session->get('FI_PARAMS');
     if(!isset($fi_params->end_session_endpoint))
       throw new Exception('end_session_endpoint not set');

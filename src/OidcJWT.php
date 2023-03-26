@@ -65,9 +65,10 @@ class OidcJWT
     ];
   }
 
-  private function __construct(JWK $JWK){
+  private function __construct(JWK | JWKSet $JWK){
     $this->JWK = $JWK;
-    $this->setAlg();
+    if($JWK instanceof JWK)
+      $this->setAlg();
   }
 
   private function getVerifier(): JWSVerifier{
@@ -77,20 +78,20 @@ class OidcJWT
     );
     return $jwsVerifier;
   }
-  public function verifyJWSWithKey(JWS $jws){
+  public function verifyJWSWithKey(JWS $jws): void{
     $verifier = $this->getVerifier();
     $isVerified = $verifier->verifyWithKey($jws, $this->JWK, 0);
     if(!$isVerified)
       throw new Exception('JWK signature not verified');
   }
-  public function verifyJWSWithKeysSet(JWS $jws){
+  public function verifyJWSWithKeysSet(JWS $jws): void{
     $verifier = $this->getVerifier();
     $isVerified = $verifier->verifyWithKeySet($jws, $this->JWK, 0);
     if(!$isVerified)
       throw new Exception('JWK signature not verified');
   }
 
-  public static function set_sign_params(string $alg, $client_secret = null, array $keySet = []): self{
+  public static function set_sign_params(string $alg, ?string $client_secret = null, array $keySet = []): self{
     $key = null;
     if($alg == 'none')
       $key = JWKFactory::createNoneKey();
@@ -105,11 +106,11 @@ class OidcJWT
     return $res;
   }
 
-  private function set_client_id(string $client_id){
+  private function set_client_id(string $client_id): void{
     $this->client_id = $client_id;
   }
 
-  private function set_endpoint(string $endpoint){
+  private function set_endpoint(string $endpoint): void{
     $this->endpoint = $endpoint;
   }
 
@@ -134,6 +135,8 @@ class OidcJWT
     ];
     if($this->JWK->has('kid'))
       $options['kid'] = $this->JWK->get('kid');
+    if($this->JWK->has('x5t'))
+      $options['x5t'] = $this->JWK->get('x5t');
     $jws = $jwsBuilder
       ->create()
       ->withPayload(json_encode($payload))
@@ -144,7 +147,15 @@ class OidcJWT
     return $token;
   }
 
-  public function setAlg(string $alg = null){
+  public function setAlg(?string $alg = null): void{
+    if(!is_null($alg)){
+      $this->sigAlg = $alg;
+      return;
+    }
+
+    if(!($this->JWK instanceof JWK))
+      throw new Exception('the key must be an instance of JWK');
+
     if(!$this->JWK->has('kty'))
       throw new Exception('Type of the key not set');
     $type = $this->JWK->get('kty');
@@ -163,7 +174,7 @@ class OidcJWT
     $this->sigAlg = $alg;
   }
 
-  public static function gen_none_jwt(string $client_id, string $endpoint){
+  public static function gen_none_jwt(string $client_id, string $endpoint): self{
     $key = JWKFactory::createNoneKey();
     $res = new self($key);
     $res->set_client_id($client_id);
@@ -189,6 +200,8 @@ class OidcJWT
     ];
     if(isset($privateKey['kid']))
       $options['kid'] = $privateKey['kid'];
+    if(isset($privateKey['x5t']))
+      $options['x5t'] = $privateKey['x5t'];
 
     $key = JWKFactory::createFromKey(
       $privateKey['pem'],

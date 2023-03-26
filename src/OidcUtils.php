@@ -20,7 +20,16 @@ class OidcUtils
       LOG_INFO => "Info",
       LOG_DEBUG => "Debug",
     ];
-    public static function ctrlTypeTime(mixed $time){
+
+    public static function getCertInfo(string $pem): \stdClass{
+      $key = JWKFactory::createFromCertificate($pem);
+      return json_decode(json_encode($key));
+    }
+    public static function getCertInfoFile(string $certPath): \stdClass{
+      $key = JWKFactory::createFromCertificate($certPath);
+      return json_decode(json_encode($key));
+    }
+    public static function ctrlTypeTime(mixed $time): void{
       if(gettype($time) !== 'integer' && gettype($time) !== 'double')
         throw new Exception('Bad time format');
     }
@@ -73,10 +82,14 @@ class OidcUtils
       json_decode($string);
       return json_last_error() === JSON_ERROR_NONE;
     }
-    public static function base64url_encode(string $string){
-      return Base64UrlSafe::encode($string, false);
+    public static function base64url_encode(string $string): string{
+      //return Base64UrlSafe::encode($string, false);
+      $enc = base64_encode($string);
+      $enc = rtrim($enc, '=');
+      $enc = strtr($enc, '+/', '-_');
+      return $enc;
     }
-    public static function base64url_decode($base64url){
+    public static function base64url_decode($base64url): string{
       try{
         return Base64UrlSafe::decode($base64url, false);
       }catch(\Throwable $t){
@@ -131,7 +144,7 @@ class OidcUtils
         throw new Exception('Log level not known');
       self::$logLevel = $level;
     }
-    public static function log(int $level, mixed $message){
+    public static function log(int $level, mixed $message): void{
       if(gettype($message) != 'string' && gettype($message) != 'array')
         throw new Exception('Log message type not accepted');
       if(!isset(self::$logConvLevel[$level]))
@@ -158,11 +171,11 @@ class OidcUtils
           }
       }
     }
-    public static function setDebug(string $class, string $method, array $info = []){
+    public static function setDebug(string $class, string $method, array $info = []): void{
       $ar = [];
       foreach($info as $k => $v)
         $ar[$k] = $v;
       $ar['logMsg'] = $class . '->' . $method . '()';
-      OidcUtils::log(LOG_DEBUG, $ar);
+      self::log(LOG_DEBUG, $ar);
     }
 }

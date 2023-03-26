@@ -4,7 +4,7 @@ use Svgta\OidcException as Exception;
 
 class OidcAuthorization
 {
-  private static $defaultScopes = ['oidc'];
+  private static $defaultScopes = ['openid'];
   private static $defaultresponse_type = 'code';
   private static $flowTypeStatic = [
     'implicit' => [
@@ -57,6 +57,7 @@ class OidcAuthorization
   private $scopes = [];
   private $endpoint = null;
   private $response_type = null;
+  private $access_type = null;
   private $flowType = null;
   private $session = null;
   private $response_mode = null;
@@ -72,7 +73,7 @@ class OidcAuthorization
   private $state = null;
   private $nonce = null;
 
-  public function __construct(string $client_id, OidcRequest $request, string $redirectUri){
+  public function __construct(string $client_id, OidcRequest $request, string $redirectUri, OidcSession $session){
     OidcUtils::setDebug(__CLASS__, __FUNCTION__, [
       'client_id'=> $client_id,
       'redirectUri' => $redirectUri,
@@ -81,7 +82,7 @@ class OidcAuthorization
     $this->scopes = self::$defaultScopes;
     $this->redirect_uri = $redirectUri;
     $this->endpoint = $request->getAuthorizationEndPoint();
-    $this->session = new OidcSession();
+    $this->session = $session;
   }
 
   public function exec(): void{
@@ -131,6 +132,7 @@ class OidcAuthorization
       'acr_values' => $this->acr_values,
       'code_challenge' => $this->code_challenge,
       'code_challenge_method' => $this->code_challenge_method,
+      'access_type' => $this->access_type,
     ];
     if(is_null($params['scope']))
       throw new Exception('Scope not defined');
@@ -145,14 +147,16 @@ class OidcAuthorization
     $this->session->put('authParams', $params);
     return $params;
   }
-  public function set_state(){
+  public function set_state(): void{
     $this->state = OidcUtils::randomString();
   }
-  public function set_nonce(){
+  public function set_nonce(): void{
     $this->nonce = OidcUtils::randomString();
   }
   public function set_code_challenge_method(string $method): void{
     $fi_config = $this->session->get('FI_PARAMS');
+    if(!isset($fi_config->code_challenge_methods_supported))
+      throw new Exception('OP does not accept PKCE flwo');
     $methodSupported = $fi_config->code_challenge_methods_supported;
     if(!in_array($method, $methodSupported))
       throw new Exception('Code challenge method not supported by the OP');
@@ -198,6 +202,10 @@ class OidcAuthorization
   }
   public function set_response_mode(string $response_mode): void{
     $this->response_mode = $response_mode;
+  }
+
+  public function set_access_type(string $access_type){
+    $this->access_type = $access_type;
   }
 
   public function set_response_type(string $response_type): void{
@@ -254,7 +262,7 @@ class OidcAuthorization
     $scopes = explode(' ', $scope);
     foreach($scopes as $s)
       if(!in_array($s, $this->scopes))
-        $this->scopes[] = $scope;
+        $this->scopes[] = $s;
   }
 
   public function getScopes(): string{

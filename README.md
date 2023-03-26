@@ -21,9 +21,11 @@ $client = new Svgta\OidcClient(
   'Your_client_id',
   'Your_client_secret', //OPTIONNAL, depend on flow used
 );
+$client->setSessionKey('aSecureKey'); //RECOMMENDED, encrypt datas in the session
 
 // OR
 $client = new Svgta\OidcClient('https://id.provider.com/.well-known/openid-configuration');
+$client->setSessionKey('aSecureKey'); //RECOMMENDED, encrypt datas in the session
 $client->client_id('Your_client_id');
 $client->client_secret('Your_client_secret');
 ```
@@ -43,6 +45,13 @@ if the /.well-known/openid-configuration does not exist, you can add the OP info
 The library use *guzzlehttp/guzzle* to access to the provider endpoints.
 
 #### Options
+
+Secure session. The data are encrypted in JWE format. This option is RECOMMENDED.
+
+```PHP
+$client->setSessionKey('aSecureKey'); //OPTIONNAL, encrypt datas in the session
+```
+
 Adding a proxy : (https://docs.guzzlephp.org/en/stable/request-options.html#proxy)
 ```PHP
 $client->request->setHttpProxy('http://proxyUri:proxyPort');
@@ -165,6 +174,8 @@ $auth->set_login_hint($value); //value is a STRING
 $auth->set_id_token_hint($value); //value is a STRING
 $auth->set_ui_locales($value); //value is a STRING
 $auth->set_max_age($value); //value is an INTERGER
+//
+$auth->set_access_type('offline'); //To get the refresh_token on google
 
 ```
 ### Token endpoint authentication
@@ -227,6 +238,18 @@ The private key must be given in its PEM format :
 
   //OPTIONNAL : Adding a Key Identifier
   $tokenRes->setPrivateKeyKid('YourUniqueKeyIdentifier');
+
+  //OPTIONNAL : Adding a x5t (X.509 Certificate SHA-1 Thumbprint)
+  //Used to authenticate to Microsoft azure
+  $cert = <<<EOD
+  -----BEGIN CERTIFICATE-----
+// Certificate informations to PEM format
+-----END CERTIFICATE-----
+  EOD;
+  $tokenRes->setPrivateKeyX5t(\Svgta\OidcUtils::getCertInfo($cert)->x5t);
+  // OR
+  $certFilePath = '../PathToTheCertDir/mycert.crt'; 
+  $tokenRes->setPrivateKeyX5t(\Svgta\OidcUtils::getCertInfoFile($certFilePath)->x5t);
 ```
 
 For RSA key, the default algorithm used by the library is RS256. Theses algorithms can be used : 
@@ -439,9 +462,7 @@ The *redirect_uri* can be used by the OP to redirect the user to the page define
 Basic :
 ```PHP
 $client = new Svgta\OidcClient(
-  'https://id.provider.com/.well-known/openid-configuration',
-  'Your_client_id',
-  'Your_client_secret'
+  'https://id.provider.com/.well-known/openid-configuration'
 );
 
 $id_token = 'The_Id_Token_You_Get'; //format jwt string
@@ -539,6 +560,44 @@ $key_3 = Svgta\OidcUtils::randomString(64);
 key_1: 0gJfbQNHzJu4V2qEpz3JEklKujYrnhnd087vScNw28jUWvMq6ZUePx6jWClZq0A98oSjl9uH2m3cDiP-XdNGrQ
 key_2: h0V3PmKCU5m_OupHR4g8zldCAnpwo-CcGLtCbq6iHEJnGMo0LqRIZ4j3az-5rK-kreBfrzZ4Zmcp41s5fhWFUC_GiGHRVX_azt6VNCE8KsYPX7FjpgWSg00V8k92z7ovDFaX4eFVmWzbOtxIDyK7f8cJ46x9B6Q2O1jttZlSRf4
 key_3 : wlTzyVZEC7M
+```
+
+### Get informations of a certificate
+The certificate must be in PEM format. The result is a stdClass object. Two méthods : 
+* *getCertInfo* : to get from a variable
+* *getCertInfoFile* : to get from a file
+
+Get informations from a varaiable : 
+```PHP
+  $cert = <<<EOD
+  -----BEGIN CERTIFICATE-----
+// Certificate informations to PEM format
+-----END CERTIFICATE-----
+  EOD;
+  $res = \Svgta\OidcUtils::getCertInfo($cert);
+```
+
+Get informations from a file : 
+```PHP
+  $path = '../pathTotheCertDir/myCert.crt';
+  $res = \Svgta\OidcUtils::getCertInfoFile($path);
+```
+
+Response example :
+```shell
+stdClass Object
+(
+    [kty] => RSA
+    [n] => s7npv4N-zt7XkCy3uCYkH38RYM-...
+    [e] => AQAB
+    [x5c] => Array
+        (
+            [0] => MIIDhzCCAm+gAwIBAgIEW66...
+        )
+
+    [x5t] => slZpLDjRxb86V8SqKHPl8KrRDII
+    [x5t#256] => _pWwqSqIPbsaYBkQXCZzzOBcSEuGXJBymHgocLQlixU
+)
 ```
 
 ### Verify if a string is a json

@@ -12,12 +12,12 @@ class OidcRequest
   public static $FI_config = null;
   private $session = null;
 
-  public function __construct($welcomeUrl = null){
+  public function __construct(?string $welcomeUrl = null, OidcSession $session){
     $this->welcomeUrl = $welcomeUrl;
     $this->client = new Client();
-    $this->session = new OidcSession();
+    $this->session = $session;
   }
-  public function introspect_token(array $params){
+  public function introspect_token(array $params): array{
     $endpoint = $this->ctrlParamsIntro();
     $params = array_merge($this->params, $params);
     try{
@@ -46,8 +46,9 @@ class OidcRequest
         throw new Exception(json_encode($ar));
 
       return $ar;
+    }
   }
-  public function revocation_endpoint(array $params){
+  public function revocation_endpoint(array $params): array{
     $endpoint = $this->ctrlParamsRevoc();
     $params = array_merge($this->params, $params);
     try{
@@ -76,6 +77,12 @@ class OidcRequest
         throw new Exception(json_encode($ar));
 
       return $ar;
+    }
+
+    return [
+      'response' => $res->getBody()->getContents(),
+      'contentType' => $contentType,
+    ];
   }
 
   public function userInfo(string $access_token){
@@ -126,12 +133,14 @@ class OidcRequest
   public function getTokens(array $params): array{
     $endpoint = $this->ctrlParamsToken();
     $params = array_merge($this->params, $params);
+    echo '<pre>'; print_r($params);
     try{
       $res = $this->client->request('POST', $endpoint, $params);
     }catch(\GuzzleHttp\Exception\ClientException $e){
       throw new Exception(json_encode([
         'code' => $e->getCode(),
-        'msg' => $e->getMessage()
+        'msg' => $e->getMessage(),
+        'body' => $e->getResponse()->getBody()->getContents(),
       ]));
     }catch(\GuzzleHttp\Exception\RequestException $e){
       throw new Exception($e->getMessage());
@@ -155,37 +164,37 @@ class OidcRequest
     }
     throw new Exception("Content Type not supported for OIDC get tokens " . $contentType);
   }
-  private function ctrlParamsIntro(){
+  private function ctrlParamsIntro(): string{
     $fi_config = $this->ctrlParams();
     if(!isset($fi_config->introspection_endpoint))
       throw new Exception('introspection_endpoint not set');
     return $fi_config->introspection_endpoint;
   }
-  private function ctrlParamsRevoc(){
+  private function ctrlParamsRevoc(): string{
     $fi_config = $this->ctrlParams();
     if(!isset($fi_config->revocation_endpoint))
       throw new Exception('revocation_endpoint not set');
     return $fi_config->revocation_endpoint;
   }
-  private function ctrlParamsUserInfo(){
+  private function ctrlParamsUserInfo(): string{
     $fi_config = $this->ctrlParams();
     if(!isset($fi_config->userinfo_endpoint))
       throw new Exception('userinfo_endpoint not set');
     return $fi_config->userinfo_endpoint;
   }
-  private function ctrlParamsJwkUri(){
+  private function ctrlParamsJwkUri(): string{
     $fi_config = $this->ctrlParams();
     if(!isset($fi_config->jwks_uri))
       throw new Exception('jwks_uri not set');
     return $fi_config->jwks_uri;
   }
-  private function ctrlParamsToken(){
+  private function ctrlParamsToken(): string{
     $fi_config = $this->ctrlParams();
     if(!isset($fi_config->token_endpoint))
       throw new Exception('token_endpoint not set');
     return $fi_config->token_endpoint;
   }
-  public function ctrlParams(){
+  public function ctrlParams(): object{
     if(is_null($this->session->get('FI_PARAMS'))){
       if(!is_null($this->welcomeUrl)){
         $res = $this->client->request('GET', $this->welcomeUrl, $this->params);
@@ -197,32 +206,32 @@ class OidcRequest
     }
     return $this->session->get('FI_PARAMS');
   }
-  public function getAuthorizationEndPoint(){
+  public function getAuthorizationEndPoint(): string{
     $fi_config = $this->ctrlParams();
     if(!isset($fi_config->authorization_endpoint))
       throw new Exception('authorization_endpoint not set');
     return $fi_config->authorization_endpoint;
   }
-  public function addOtherParam(string $key, mixed $value){
+  public function addOtherParam(string $key, mixed $value): void{
     $this->params[$key] = $value;
   }
-  public function verifyTls(bool $verify){
+  public function verifyTls(bool $verify): void{
     $this->params['verify'] = $verify;
   }
-  public function setCert(string|array $cert){
+  public function setCert(string|array $cert): void{
     $this->params['cert'] = $cert;
   }
-  public function setHttpProxy(string $proxy){
+  public function setHttpProxy(string $proxy): void{
     if(!isset($this->params['proxy']))
       $this->params['proxy'] = [];
     $this->params['proxy']['http'] = $proxy;
   }
-  public function setHttpsProxy(string $proxy){
+  public function setHttpsProxy(string $proxy): void{
     if(!isset($params['proxy']))
       $this->params['proxy'] = [];
     $this->params['proxy']['https'] = $proxy;
   }
-  public function setNoProxy(array $proxy){
+  public function setNoProxy(array $proxy): void{
     if(!isset($params['proxy']))
       $this->params['proxy'] = [];
     $this->params['proxy']['no'] = $proxy;

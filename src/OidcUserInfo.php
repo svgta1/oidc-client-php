@@ -11,9 +11,9 @@ class OidcUserInfo
   private $id_token = null;
   private $client_id = null;
 
-  public function __construct(string $client_id, OidcRequest $request, $access_token = null, $id_token = null){
+  public function __construct(string $client_id, OidcRequest $request, ?string $access_token = null, ?string $id_token = null, OidcSession $session){
     OidcUtils::setDebug(__CLASS__, __FUNCTION__);
-    $this->session = new OidcSession();
+    $this->session = $session;
     if(!is_null($access_token) && !is_string($access_token))
       throw new Exception('Bad access_token type');
     if(is_null($access_token)){
