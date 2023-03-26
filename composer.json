@@ -1,5 +1,5 @@
 {
-    "name": "svgta/oidc-client",
+    "name": "svgta/oidc-client-php",
     "description": "OpenId Connect Client for PHP",
     "type": "library",
     "require": {
