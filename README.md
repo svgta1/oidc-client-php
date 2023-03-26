@@ -45,6 +45,8 @@ $client->client_secret('Your_client_secret');
 if the /.well-known/openid-configuration does not exist, you can add the OP informations manually :
 ```PHP
   $client = new Svgta\OidcClient();
+  $client->setSessionKey('aSecureKey'); //RECOMMENDED, encrypt datas in the session
+
   $client->add_OP_info('authorization_endpoint', 'https://id.provider.com/auth');
   $client->add_OP_info('token_endpoint', 'https://id.provider.com/token');
   $client->add_OP_info('userinfo_endpoint', 'https://id.provider.com/user');
@@ -55,6 +57,8 @@ if the /.well-known/openid-configuration does not exist, you can add the OP info
 ```
 
 The library use *guzzlehttp/guzzle* to access to the provider endpoints.
+
+---
 
 #### Options
 
@@ -90,6 +94,7 @@ Add other Guzzle Request Options : (https://docs.guzzlephp.org/en/stable/request
 $client->request->addOtherParam('debug', true);
 
 ```
+---
 
 #### Log level
 The default log level is `LOG_ERR`. To change it : 
@@ -106,6 +111,7 @@ The parameter is an PHP constant in this list :
 - LOG_INFO
 - LOG_DEBUG
 
+---
 
 ### Authorization
 This section use the specification discribed to the url https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowSteps
@@ -126,8 +132,8 @@ $client = new Svgta\OidcClient(
 
 $auth = $client->authorization('https://your_callback_uri');
 $auth->addScope('email profile');
-$auth->set_state();
-$auth->set_nonce();
+$auth->set_state(); //RECOMMENDED
+$auth->set_nonce(); //RECOMMENDED
 
 $auth->exec(); // header location to the OP url
 ```
@@ -190,6 +196,8 @@ $auth->set_max_age($value); //value is an INTERGER
 $auth->set_access_type('offline'); //To get the refresh_token on google
 
 ```
+---
+
 ### Token endpoint authentication
 
 #### Basic usage
@@ -214,7 +222,7 @@ $tokenRes->set_auth_method('client_secret_basic'); // optional, to force the aut
 
 ...
 ```
-
+---
 #### Usign the method *client_secret_jwt* 
 
 The authentication to the *token_endpoint* is made by sending a JWT signed with the client_ secret.
@@ -229,7 +237,7 @@ The JWT can be signed with :
 // Example
   $tokenRes->setSigAlg('HS512');
 ```
-
+---
 #### Usign the method *private_key_jwt* 
 
 The authentication to the *token_endpoint* is made by sending a JWT signed with a RSA or Elliptic private key. The public key or certificate must be known by the OP.
@@ -258,7 +266,7 @@ The private key must be given in its PEM format :
 // Certificate informations to PEM format
 -----END CERTIFICATE-----
   EOD;
-  
+
   $tokenRes->setPrivateKeyX5t(\Svgta\OidcUtils::getCertInfo($cert)->x5t);
   // OR
   $certFilePath = '../PathToTheCertDir/mycert.crt'; 
@@ -282,12 +290,16 @@ For Ellyptic key, the algorithm is automatically set from the curve present in t
 - P-384 : ES384
 - P-521 : ES512
 
+---
+
 ### Get tokens from the token endpoint
 
 #### Information
 All tokens get by the differents methods are set in session.
 
 The *id_token* must be a JWS (JWT signed by the OP with a key known in it's *jwks_uri* endpoint or signed with the *client_secret*).
+
+---
 
 #### Flow code, implicit, hybrid
 Generaly used by the callback url after the authorization on the OP for code or hybrid.
@@ -308,6 +320,7 @@ $tokenRes = $client->token();
 $tokens = $tokenRes->get_tokens(); 
 ```
 
+---
 
 #### Password grant
 
@@ -330,6 +343,8 @@ $tokenRes = $client->token();
 //
 $tokens = $tokenRes->password_grant($username, $password); 
 ```
+---
+
 #### Client credentials
 
 This flow is used when applications request an *access_token* to access their own resources.
@@ -351,6 +366,8 @@ $scopes = 'write read';
 $tokens = $tokenRes->client_credentials($scopes); //$scopes is optionnal
 ```
 
+---
+
 #### Refresh token
 
 To get new *access_token* and *id_token*. The refresh_token must be send with the others tokens. Generaly, in the authorization flow, the scope *offline_access* must be used.
@@ -371,6 +388,9 @@ $tokenRes = $client->token();
 $tokens = $tokenRes->refresh_token($refresh_token); 
 // the var refresh_token is optionnal. If not set, the library try to find it in its session.
 ```
+
+---
+
 ### Get userInfo
 
 The *userinfo_endpoint* need the *access_token*. If it's in session, you don't need to give it back. 
@@ -399,6 +419,7 @@ $userInfo = $client->userInfo();
 
 ```
 
+---
 
 ### Introspect token
 
@@ -433,6 +454,8 @@ $type = 'refresh_token';
 $revokeResponse = $tokens->introspect_token($token, $type); 
 ```
 
+---
+
 ### Revoke token
 
 Only *access_token* and *refresh_token* can been used. 
@@ -464,6 +487,8 @@ $type = 'refresh_token';
 //..
 $revokeResponse = $tokens->revoke_token($token, $type); 
 ```
+
+---
 
 ### Logout
 Based on OpenID Connect Session Management 1.0 - draft 17 (https://openid.net/specs/openid-connect-session-1_0-17.html)
@@ -549,6 +574,8 @@ openssl ecparam -name prime256v1 -genkey -noout -out key.pem
 openssl ec -in key.pem -pubout -out public.pem
 ```
 
+---
+
 ### Generate an UUID
 
 ```PHP
@@ -558,6 +585,8 @@ $uuid = Svgta\OidcUtils::genUUID();
 ```shell
 uuid: dd5c827b-9c8a-4831-913e-f5cbec7195c4
 ```
+
+---
 
 ### Generate a security key
 By default, the key generated is 512 bits long. You can change it if needed.
@@ -574,6 +603,8 @@ key_1: 0gJfbQNHzJu4V2qEpz3JEklKujYrnhnd087vScNw28jUWvMq6ZUePx6jWClZq0A98oSjl9uH2
 key_2: h0V3PmKCU5m_OupHR4g8zldCAnpwo-CcGLtCbq6iHEJnGMo0LqRIZ4j3az-5rK-kreBfrzZ4Zmcp41s5fhWFUC_GiGHRVX_azt6VNCE8KsYPX7FjpgWSg00V8k92z7ovDFaX4eFVmWzbOtxIDyK7f8cJ46x9B6Q2O1jttZlSRf4
 key_3 : wlTzyVZEC7M
 ```
+
+---
 
 ### Get informations of a certificate
 The certificate must be in PEM format. The result is a stdClass object. Two méthods : 
@@ -613,6 +644,8 @@ stdClass Object
 )
 ```
 
+---
+
 ### Verify if a string is a json
 
 The response is a boolean.
@@ -649,6 +682,7 @@ The OP should specify (it's optional) in it's discovery url the type of encrypti
 
 For asymetric keys (RSA or EC), you have to know the private key and the OP the public key. For symetric key (may be the *client_secret*), you and the OP must known it.
 
+---
 
 ### Dynamic registration
 
