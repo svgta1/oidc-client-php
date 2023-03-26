@@ -232,7 +232,7 @@ The JWT can be signed with :
 
 #### Usign the method *private_key_jwt* 
 
-The authentication to the *token_endpoint* is made by sending a JWT signed with a RSA or Elliptic private key. The public key must be known by the OP.
+The authentication to the *token_endpoint* is made by sending a JWT signed with a RSA or Elliptic private key. The public key or certificate must be known by the OP.
 
 The private key must be given in its PEM format : 
 ```PHP
@@ -258,6 +258,7 @@ The private key must be given in its PEM format :
 // Certificate informations to PEM format
 -----END CERTIFICATE-----
   EOD;
+  
   $tokenRes->setPrivateKeyX5t(\Svgta\OidcUtils::getCertInfo($cert)->x5t);
   // OR
   $certFilePath = '../PathToTheCertDir/mycert.crt'; 
@@ -625,7 +626,7 @@ $isJson = Svgta\Oidcutils::isJson('{"key": "first", "value": "test"}');
 
 ## Advanced security Supported 
 
-JWS are supported for authentication. The OP must be configured with your asymetric *publicKey* or your *client_secret* to verify the signature and accepts this mode of authentication (mode *private_key_jwt* OR *client_secret_jwt*).
+JWS are supported for authentication. The OP must be configured with your asymetric *publicKey*/*certificate* or your *client_secret* to verify the signature and accepts this mode of authentication (mode *private_key_jwt* OR *client_secret_jwt*).
 
 For security reasons, you have to renew your keys periodically and give to the OP the new public key for asymetric keys.
 
