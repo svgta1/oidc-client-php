@@ -10,6 +10,18 @@ A library that allows appllications to authentificate a user through the OpenId 
 * json extension
 * openssl
 
+## How to install
+
+Composer is the best way to install the library with all its dependencies.
+
+```shell
+composer require svgta/oidc-client-php
+```
+
+In your PHP script, include composer autoload. Example : 
+```PHP
+require dirname(__FILE__, 2) . '/vendor/autoload.php';
+```
 ## How to use
 
 ### Initialize
