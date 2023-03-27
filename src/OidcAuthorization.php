@@ -269,7 +269,7 @@ class OidcAuthorization
   }
 
   public function getScopes(): string{
-    return implode(' ', $this->scopes);
+    return trim(implode(' ', $this->scopes));
   }
 
 }

@@ -18,12 +18,14 @@ class OidcClient
   {
     OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['welcomeUrl'=> $welcomeUrl]);
     $this->session = new OidcSession();
+    $this->session->delete('FI_PARAMS');
     $this->welcomeUrl = $welcomeUrl;
     if(!is_null($client_id))
       $this->client_id($client_id);
     if(!is_null($client_secret))
       $this->client_secret($client_secret);
     $this->request = new OidcRequest($welcomeUrl, $this->session);
+    $this->request->ctrlParams();
   }
 
   public function setSessionKey(string $key){
@@ -36,7 +38,6 @@ class OidcClient
   }
 
   public function add_OP_info(string $key, mixed $value): void{
-    $this->request->ctrlParams();
     if(is_array($value) || is_object($value))
       $logValue = json_encode($value);
     else
