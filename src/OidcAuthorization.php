@@ -238,20 +238,24 @@ class OidcAuthorization
       throw new Exception('No flow type found');
 
     $fi_config = $this->session->get('FI_PARAMS');
-    $fiResSupported = $fi_config->response_types_supported;
-    $fiResFound = false;
-    foreach($fiResSupported as $fiRes){
-      $type = explode(' ', $fiRes);
-      if(count($type) !== $count)
-        continue;
-      foreach($type as $t){
-        if(!in_array($t, $res))
-          continue 2;
-      }
+    $fiResSupported = isset($fi_config->response_types_supported) ? $fi_config->response_types_supported : null;
+    if(is_null($fiResSupported)){
       $fiResFound = true;
+    }else{
+      $fiResFound = false;
+      foreach($fiResSupported as $fiRes){
+        $type = explode(' ', $fiRes);
+        if(count($type) !== $count)
+          continue;
+        foreach($type as $t){
+          if(!in_array($t, $res))
+            continue 2;
+        }
+        $fiResFound = true;
+      }
+      if(!$fiResFound)
+        throw new Exception('Response type not supported by the OP' . json_encode($res));
     }
-    if(!$fiResFound)
-      throw new Exception('Response type not supported by the OP' . json_encode($res));
 
     $this->flowType = $flow;
     $this->response_type = $response_type;

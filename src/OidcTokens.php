@@ -155,6 +155,8 @@ class OidcTokens
     $fi_config = $this->session->get('FI_PARAMS');
     if(is_null($fi_config))
       throw new Exception('OP well-known conf not set');
+    if(!isset($fi_config->grant_types_supported))
+      $fi_config->grant_types_supported = ['authorization_code'];
     if(isset($fi_config->grant_types_supported) && !in_array($grant_type, $fi_config->grant_types_supported))
       throw new Exception('Grant type ' . $grant_type . ' not supported by the OP');
   }
@@ -283,6 +285,8 @@ class OidcTokens
       $this->auth_method = 'pkce';
     }else{
       $fi_config = $this->session->get('FI_PARAMS');
+      if(!isset($fi_config->token_endpoint_auth_methods_supported))
+        $fi_config->token_endpoint_auth_methods_supported = ['client_secret_basic'];
       foreach(self::$default_auth_method_order as $method){
         if(($method == "private_key_jwt") && is_null($this->privateKey))
           continue;
@@ -329,6 +333,8 @@ class OidcTokens
       $this->auth_method = 'pkce';
     }else{
       $fi_config = $this->session->get('FI_PARAMS');
+      if(!isset($fi_config->token_endpoint_auth_methods_supported))
+        $fi_config->token_endpoint_auth_methods_supported = ['client_secret_basic'];
       $auth_method_supported = $fi_config->token_endpoint_auth_methods_supported;
       if(!in_array($method, $auth_method_supported))
         throw new Exception('Auth method not supported by the OP');

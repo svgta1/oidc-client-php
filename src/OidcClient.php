@@ -62,7 +62,10 @@ class OidcClient
     $this->client_secret = $client_secret;
   }
   public function authorization(string $redirectUri): OidcAuthorization{
+    $fi_params = $this->session->get('FI_PARAMS');
     $this->session->clear();
+    if(!is_null($fi_params))
+      $this->session->put('FI_PARAMS', $fi_params);
     return new OidcAuthorization($this->client_id, $this->request, $redirectUri, $this->session);
   }
   public function token(array $request = []): OidcTokens{
