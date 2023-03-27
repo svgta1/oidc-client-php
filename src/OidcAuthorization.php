@@ -211,7 +211,6 @@ class OidcAuthorization
   public function set_response_type(string $response_type): void{
     $res = explode(' ', $response_type);
     $count = count($res);
-    print_r($count);
     $type = [];
     foreach(self::$flowTypeStatic as $flowtype => $ar){
       if($count >= $ar['min_length'] && $count <= $ar['max_length'])

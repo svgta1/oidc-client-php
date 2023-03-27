@@ -133,7 +133,6 @@ class OidcRequest
   public function getTokens(array $params): array{
     $endpoint = $this->ctrlParamsToken();
     $params = array_merge($this->params, $params);
-    echo '<pre>'; print_r($params);
     try{
       $res = $this->client->request('POST', $endpoint, $params);
     }catch(\GuzzleHttp\Exception\ClientException $e){
