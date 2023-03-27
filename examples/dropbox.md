@@ -31,7 +31,6 @@ $auth = $client->authorization($callback_url);
 
 $auth->addScope('email profile');
 $auth->set_state();
-$auth->set_nonce();
 
 $auth->exec();
 ```
