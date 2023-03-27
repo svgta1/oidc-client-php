@@ -292,7 +292,7 @@ For Ellyptic key, the algorithm is automatically set from the curve present in t
 
 ---
 
-### Get tokens from the token endpoint
+### Tokens management
 
 #### Information
 All tokens get by the differents methods are set in session.
@@ -391,37 +391,7 @@ $tokens = $tokenRes->refresh_token($refresh_token);
 
 ---
 
-### Get userInfo
-
-The *userinfo_endpoint* need the *access_token*. If it's in session, you don't need to give it back. 
-
-The *id_token* is required to verify the *sub* claim. If it's in session, you don't need to give it back.
-
-The library support the response in *json* format and *jwt* (jwt signed by the OP with a key known in it's *jwks_uri* endpoint or signed with the *client_secret*).
-
-
-```PHP
-$client = new Svgta\OidcClient(
-  'https://id.provider.com/.well-known/openid-configuration',
-  'Your_client_id',
-  'Your_client_secret'
-);
-
-// ...
-
-$tokenRes = $client->token();
-// ...
-$tokens = $tokenRes->get_tokens();
-// ...
-$userInfo = $client->userInfo(); 
-// method : $client->userInfo($access_token = null, $id_token = null);
-// access_token and id_token are optionals if set in session (the method $tokenRes->get_tokens() do it)
-
-```
-
----
-
-### Introspect token
+#### Introspect token
 
 The OP must have *introspection_endpoint* set.
 > The instrospection endpoint is not defined in OpenId Connect Provider Metadata (https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata). You can add it with (it's an example) : 
@@ -456,7 +426,7 @@ $revokeResponse = $tokens->introspect_token($token, $type);
 
 ---
 
-### Revoke token
+#### Revoke token
 
 Only *access_token* and *refresh_token* can been used. 
 
@@ -483,12 +453,54 @@ $type = 'access_token';
 // OR
 $token = '...refreshTokenValue';
 $type = 'refresh_token';
-// $type id optional. If set, it must have 'refresh_token' or 'access_token' value
+// $type is optionnal. If set, it must have 'refresh_token' or 'access_token' value
 //..
 $revokeResponse = $tokens->revoke_token($token, $type); 
 ```
 
 ---
+
+### Get userInfo
+
+The *userinfo_endpoint* need the *access_token*. If it's in session, you don't need to give it back. 
+
+The *id_token* is required to verify the *sub* claim. If it's in session, you don't need to give it back.
+
+The library support the response in *json* format and *jwt* (jwt signed by the OP with a key known in it's *jwks_uri* endpoint or signed with the *client_secret*).
+
+
+```PHP
+$client = new Svgta\OidcClient(
+  'https://id.provider.com/.well-known/openid-configuration',
+  'Your_client_id',
+  'Your_client_secret'
+);
+
+// ...
+
+$tokenRes = $client->token();
+// ...
+$tokens = $tokenRes->get_tokens();
+// ...
+$userInfo = $client->userInfo(); 
+// method : $client->userInfo($access_token = null, $id_token = null);
+// access_token and id_token are optionals if set in session (the method $tokenRes->get_tokens() do it)
+
+```
+
+> :warning: *userinfo_endpoint* not set
+>
+> Some OP don't give an *userinfo_endpoint* (Dropbox is an example). If the contents of the *id_token* is enough for you, you can get the result of the *payload*
+> ```PHP
+> ...
+> $tokenRes = $client->token();
+> $tokens = $tokenRes->get_tokens();
+> $payload = $tokenRes->get_id_token_payload(); //result is an array
+>```
+> If you call *$client->userInfo()* but the OP don't have the *userinfo_endpoint* set, you will get an *Svgta\OidcException*
+---
+
+
 
 ### Logout
 Based on OpenID Connect Session Management 1.0 - draft 17 (https://openid.net/specs/openid-connect-session-1_0-17.html)

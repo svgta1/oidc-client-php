@@ -39,6 +39,14 @@ class OidcTokens
     $this->authParams = $this->session->get('authParams');
   }
 
+  public function get_id_token_payload(): array{
+    $tokens = $this->getTokensFromSession();
+    if(!isset($tokens['id_token']))
+      throw new Exception('id_token not knwon');
+    $parse = OidcJWT::parseJWS($tokens['id_token']);
+    return $parse['payload'];
+  }
+
   public function introspect_token(string $token, ?string $type = null): array{
     if(!is_null($type)){
       if(!is_string($type))
