@@ -3,7 +3,7 @@
 ## Introduction
 > Based on the generic example doc.
 
-Github has an discovery url. It's using OAUTH2 and not OpenId connect.
+Github has not a discovery url. It's using OAUTH2 and not OpenId connect.
 
 You have to set manually the configurations to access to the user informations.
 
