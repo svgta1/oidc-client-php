@@ -17,6 +17,98 @@ class OidcRequest
     $this->client = new Client();
     $this->session = $session;
   }
+
+  public function deleteRegistration(array $params, string $url): array{
+    $params = array_merge($this->params, $params);
+    try{
+      $res = $this->client->request('DELETE', $url, $params);
+    }catch(\GuzzleHttp\Exception\ClientException $e){
+      throw new Exception(json_encode([
+        'code' => $e->getCode(),
+        'msg' => $e->getMessage()
+      ]));
+    }catch(\GuzzleHttp\Exception\RequestException $e){
+      throw new Exception($e->getMessage());
+    }
+    $contentType = $res->getHeader('Content-Type')[0];
+    if(preg_match('/^application\/json/', $contentType)){
+      $ar = json_decode($res->getBody(), true);
+      return $ar;
+    }
+    if(preg_match('/^application\/x-www-form-urlencoded/', $contentType)){
+      $contents = urldecode($res->getBody()->getContents());
+      $ar = [];
+      foreach(explode('&', $contents) as $content){
+        list($param, $value) = explode("=", $content);
+        $ar[$param] = $value;
+      }
+      if(isset($ar['error']))
+        throw new Exception(json_encode($ar));
+
+      return $ar;
+  }
+
+  public function updateRegistration(array $params, string $url): array{
+    $params = array_merge($this->params, $params);
+    try{
+      $res = $this->client->request('PUT', $url, $params);
+    }catch(\GuzzleHttp\Exception\ClientException $e){
+      throw new Exception(json_encode([
+        'code' => $e->getCode(),
+        'msg' => $e->getMessage()
+      ]));
+    }catch(\GuzzleHttp\Exception\RequestException $e){
+      throw new Exception($e->getMessage());
+    }
+    $contentType = $res->getHeader('Content-Type')[0];
+    if(preg_match('/^application\/json/', $contentType)){
+      $ar = json_decode($res->getBody(), true);
+      return $ar;
+    }
+    if(preg_match('/^application\/x-www-form-urlencoded/', $contentType)){
+      $contents = urldecode($res->getBody()->getContents());
+      $ar = [];
+      foreach(explode('&', $contents) as $content){
+        list($param, $value) = explode("=", $content);
+        $ar[$param] = $value;
+      }
+      if(isset($ar['error']))
+        throw new Exception(json_encode($ar));
+
+      return $ar;
+  }
+
+  public function registration(array $params): array{
+    $endpoint = $this->ctrlParamsRegistration();
+    $params = array_merge($this->params, $params);
+    try{
+      $res = $this->client->request('POST', $endpoint, $params);
+    }catch(\GuzzleHttp\Exception\ClientException $e){
+      throw new Exception(json_encode([
+        'code' => $e->getCode(),
+        'msg' => $e->getMessage()
+      ]));
+    }catch(\GuzzleHttp\Exception\RequestException $e){
+      throw new Exception($e->getMessage());
+    }
+    $contentType = $res->getHeader('Content-Type')[0];
+    if(preg_match('/^application\/json/', $contentType)){
+      $ar = json_decode($res->getBody(), true);
+      return $ar;
+    }
+    if(preg_match('/^application\/x-www-form-urlencoded/', $contentType)){
+      $contents = urldecode($res->getBody()->getContents());
+      $ar = [];
+      foreach(explode('&', $contents) as $content){
+        list($param, $value) = explode("=", $content);
+        $ar[$param] = $value;
+      }
+      if(isset($ar['error']))
+        throw new Exception(json_encode($ar));
+
+      return $ar;
+  }
+
   public function introspect_token(array $params): array{
     $endpoint = $this->ctrlParamsIntro();
     $params = array_merge($this->params, $params);
@@ -162,6 +254,12 @@ class OidcRequest
       return $ar;
     }
     throw new Exception("Content Type not supported for OIDC get tokens " . $contentType);
+  }
+  private function ctrlParamsRegistration(): string{
+    $fi_config = $this->ctrlParams();
+    if(!isset($fi_config->registration_endpoint))
+      throw new Exception('registration_endpoint not set');
+    return $fi_config->registration_endpoint;
   }
   private function ctrlParamsIntro(): string{
     $fi_config = $this->ctrlParams();
