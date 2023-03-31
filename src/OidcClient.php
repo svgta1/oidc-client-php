@@ -28,6 +28,10 @@ class OidcClient
     $this->request->ctrlParams();
   }
 
+  public function keysManager(): oidcKeys{
+    return OidcKeys;
+  }
+
   public function setSessionKey(string $key){
     OidcSession::setSessionKey($key);
   }
