@@ -56,8 +56,9 @@ class OidcRegistration
 
   // https://www.rfc-editor.org/rfc/rfc7592
   public function delete(string $url): array{
-    if(!filter_var($uriUpdate, FILTER_VALIDATE_URL))
+    if(!filter_var($url, FILTER_VALIDATE_URL))
       throw new Exception('URL format invalide');
+      $reqParams = [];
       if(!is_null( $this->access_token))
         $reqParams = [
           'headers' => [
@@ -70,7 +71,7 @@ class OidcRegistration
 
   // https://www.rfc-editor.org/rfc/rfc7592
   public function update(string $url): array{
-    if(!filter_var($uriUpdate, FILTER_VALIDATE_URL))
+    if(!filter_var($url, FILTER_VALIDATE_URL))
       throw new Exception('URL format invalide');
     $reqParams = $this->checkParams();
     $ret = $this->request->updateRegistration($reqParams, $url);

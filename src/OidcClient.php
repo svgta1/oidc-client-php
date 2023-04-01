@@ -82,6 +82,6 @@ class OidcClient
     return $res->get();
   }
   public function registration(?string $access_token = null){
-    return new OidcRegistration($access_token, $this->request);
+    return new OidcRegistration($this->request, $access_token);
   }
 }
