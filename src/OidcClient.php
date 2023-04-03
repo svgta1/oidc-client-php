@@ -25,11 +25,16 @@ class OidcClient
     if(!is_null($client_secret))
       $this->client_secret($client_secret);
     $this->request = new OidcRequest($welcomeUrl, $this->session);
+  }
+
+  public function keysManager(): oidcKeys{
     $this->request->ctrlParams();
+    return new OidcKeys();
   }
 
   public function setSessionKey(string $key){
     OidcSession::setSessionKey($key);
+    $this->request->ctrlParams();
   }
 
   public function logout(?string $id_token = null, ?string $redirect_uri = null): void{
@@ -52,6 +57,7 @@ class OidcClient
     $this->client_id = $client_id;
   }
   public function client_secret(string $client_secret): void{
+    $this->client_secret = $client_secret;
     OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['client_secret' => 'not loggable info']);
     $keyLen = mb_strlen($client_secret, '8bit');
     if($keyLen < 32)
@@ -60,9 +66,20 @@ class OidcClient
       OidcUtils::log(LOG_WARNING, 'The client_secret is to small to verify HS384 signature');
     if($keyLen < 64)
       OidcUtils::log(LOG_WARNING, 'The client_secret is to small to verify HS512 signature');
-    $this->client_secret = $client_secret;
+    $oidcKeys = new OidcKeys();
+    $oidcKeys
+      ->use_for_encDec()
+      ->set_kid('client_secret')
+      ->set_secret_key($this->client_secret)
+      ->build();
+    $oidcKeys
+      ->use_for_signVerify()
+      ->set_kid('client_secret')
+      ->set_secret_key($this->client_secret)
+      ->build();
   }
   public function authorization(string $redirectUri): OidcAuthorization{
+    $this->request->ctrlParams();
     $fi_params = $this->session->get('FI_PARAMS');
     $this->session->clear();
     if(!is_null($fi_params))
@@ -74,10 +91,10 @@ class OidcClient
     return new OidcTokens($req, $this->client_id, $this->request, $this->client_secret, $this->session);
   }
   public function userInfo(?string $access_token = null, ?string $id_token = null): array{
-    $res = new OidcUserInfo($this->client_id, $this->request, $access_token, $id_token, $this->session);
+    $res = new OidcUserInfo($this->client_id, $this->request, $access_token, $id_token, $this->session, $this->client_secret);
     return $res->get();
   }
   public function registration(?string $access_token = null){
-    return new OidcRegistration($access_token, $this->request);
+    return new OidcRegistration($this->request, $access_token);
   }
 }

@@ -16,7 +16,10 @@
         "web-token/jwt-encryption-algorithm-aesgcmkw": "^3.1",
         "web-token/jwt-encryption-algorithm-rsa": "^3.1",
         "web-token/jwt-encryption-algorithm-aesgcm": "^3.1",
-        "web-token/jwt-encryption-algorithm-aescbc": "^3.1"
+        "web-token/jwt-encryption-algorithm-aescbc": "^3.1",
+        "web-token/jwt-encryption-algorithm-ecdh-es": "^3.1",
+        "web-token/jwt-encryption-algorithm-pbes2": "^3.1",
+        "web-token/jwt-nested-token": "^3.1"
     },
     "license": "MIT",
     "autoload": {
