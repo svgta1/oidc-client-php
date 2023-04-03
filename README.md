@@ -10,6 +10,50 @@ A library that allows appllications to authentificate a user through the OpenId 
 * json extension
 * openssl
 
+## Supported
+
+**Authentication**
+- [x] pkce
+- [x] client_secret_basic 
+- [x] client_secret_post 
+- [x] client_secret_jwt 
+- [x] private_key_jwt 
+- [x] client credential
+- [x] password grant
+- [ ] JWE Encryption
+- [ ] Nested JWT (JWS encrypted in a JWE)
+---
+**Claims request**
+- [x] Scope
+- [ ] Request parameter
+- [ ] JWS, JWE, Nested JWT request parameter
+---
+**id_token**
+- [x] Signed JWT (JWS)
+- [x] Nested JWT (JWS encrypted in a JWE)
+---
+**UserInfo**
+- [X] Json
+- [x] Signed JWT (JWS)
+- [X] Encrypted Json
+- [x] Nested JWT (JWS encrypted in a JWE)
+---
+**Tokens**
+- [x] Refresh
+- [x] Revoke
+- [x] Introspect
+---
+**Logout**
+- [x] Front-channel logout
+- [ ] Back-channel logout
+---
+**Dynamic Registration**
+- [x] Registration
+- [x] Update
+- [x] Delete
+---
+
+
 ## How to install
 
 Composer is the best way to install the library with all its dependencies.
@@ -112,6 +156,14 @@ The parameter is an PHP constant in this list :
 - LOG_DEBUG
 
 ---
+### Examples
+
+You can get some examples on how to use the library in the directory `/examples` :
+- [Generic usage](./examples/generic.md)
+- [Google specificities](./examples/google.md)
+- [Dropbox specificities](./examples/dropbox.md)
+- [Github specificities](./examples/Github.md)
+- [Microsoft Azure *`private_key_jwt`* authentication](./examples/msAzure.md)
 
 ### Authorization
 This section use the specification discribed to the url https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowSteps
@@ -242,35 +294,66 @@ The JWT can be signed with :
 
 The authentication to the *token_endpoint* is made by sending a JWT signed with a RSA or Elliptic private key. The public key or certificate must be known by the OP.
 
-The private key must be given in its PEM format : 
+The private key can be given in multiple format : 
 ```PHP
-  $PEM = <<<EOD
+
+//From PEM
+  $privateKey = <<<EOD
   -----BEGIN EC PRIVATE KEY-----
   MHcCAQEEINrfGx+a3flbw/2bjiiDkF8+VMpqjE751+ILDkzxM8FvoAoGCCqGSM49
   AwEHoUQDQgAED2XFGdEmpygLSqqn5SMXeR740smRBfULJet3hzkUZ+YySKzjCHkS
   LVxw3dimCk14de2ANcVxosOU5hOCP6SDBw==
   -----END EC PRIVATE KEY-----
   EOD;
-  $tokenRes->setPrivateKey($PEM, $password); // $password is OPTIONNAL. Set it if the key is protected by a password
-  // OR
-  $tokenRes->setPrivateKeyFile($privateKeyFilePath, $password); // $password is OPTIONNAL. Set it if the key is protected by a password
 
+  $client->keysManager()
+    ->set_private_key_pem($privateKey, $password) // $password is OPTIONNAL. Set it if the key is protected by a password
+    ->use_for_signVerify()
+    ->set_kid('my key id') //optionnal
+    ->build();
 
-  //OPTIONNAL : Adding a Key Identifier
-  $tokenRes->setPrivateKeyKid('YourUniqueKeyIdentifier');
+//From file contening pem
+  $client->keysManager()
+    ->set_private_key_pem_file($pathOfFile, $password) // $password is OPTIONNAL. Set it if the key is protected by a password
+    ->use_for_signVerify()
+    ->set_kid('my key id') //optionnal
+    ->build();
 
-  //OPTIONNAL : Adding a x5t (X.509 Certificate SHA-1 Thumbprint)
-  //Used to authenticate to Microsoft azure
+//From p12 file
+  $client->keysManager()
+    ->set_p12_file($pathOfFile, $password) // $password is OPTIONNAL. Set it if the p12 is protected by a password
+    ->use_for_signVerify()
+    ->set_kid('my key id') //optionnal
+    ->build();
+
+//From X509 certificate
   $cert = <<<EOD
   -----BEGIN CERTIFICATE-----
-// Certificate informations to PEM format
------END CERTIFICATE-----
+  // Certificate informations to PEM format
+  -----END CERTIFICATE-----
   EOD;
 
-  $tokenRes->setPrivateKeyX5t(\Svgta\OidcUtils::getCertInfo($cert)->x5t);
-  // OR
-  $certFilePath = '../PathToTheCertDir/mycert.crt'; 
-  $tokenRes->setPrivateKeyX5t(\Svgta\OidcUtils::getCertInfoFile($certFilePath)->x5t);
+  $client->keysManager()
+    ->set_private_key_pem($privateKey, $password) // $password is OPTIONNAL. Set it if the key is protected by a password
+    ->set_x509($cert)
+    ->use_for_signVerify()
+    ->set_kid('my key id') //optionnal
+    ->build();
+
+//From X509 certificate file
+  $client->keysManager()
+    ->set_private_key_pem_file($pathToPrivateKey, $password) // $password is OPTIONNAL. Set it if the key is protected by a password
+    ->set_x509($pathToCert)
+    ->use_for_signVerify()
+    ->set_kid('my key id') //optionnal
+    ->build();
+
+//Use certificate Info for the signed JWT header in the tokens requests
+// -- used to authentificate to microsoft azure with a certificate
+  $tokenRes = $client->token();
+  $tokenRes->jwt_headers_options('kid'); //add the kid from the certificate
+  $tokenRes->jwt_headers_options('x5t'); //add x5t from the certificate
+  
 ```
 
 For RSA key, the default algorithm used by the library is RS256. Theses algorithms can be used : 
@@ -428,7 +511,7 @@ $revokeResponse = $tokens->introspect_token($token, $type);
 
 #### Revoke token
 
-Only *access_token* and *refresh_token* can been used. 
+Only *access_token* and *refresh_token* can be used. 
 
 The OP must have *revocation_endpoint* set.
 > The revocation endpoint is not defined in OpenId Connect Provider Metadata (https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata). You can add it with (it's an example) : 
@@ -507,7 +590,7 @@ Based on OpenID Connect Session Management 1.0 - draft 17 (https://openid.net/sp
 
 The OP must have the endpoint *end_session_endpoint*. It's recommended to give the *id_token* in the request. If not set, the library tries to find it in its session.
 
-The *redirect_uri* can be used by the OP to redirect the user to the page defined. The *redirect_uri* has to been registred in the OP configuration.
+The *redirect_uri* can be used by the OP to redirect the user to the page defined. The *redirect_uri* has to be registred in the OP configuration.
 
 Basic :
 ```PHP
@@ -522,6 +605,57 @@ $client->logout($id_token, $redirect_uri);
 // $id_token and $redirecti_uri are optionals. If id_token is not given, the library try to find it in the session.
 // if you don't give id_token but give redirect_uri : $client->logout(null, $redirect_uri);
 ```
+
+## Advanced use
+### Nested JWT
+
+A Nested JWT is a JWT signed before encryption (a JWS in a JWE).
+
+The library can automatically deal with Nested JWT for *userinfo response* and *id_token*. But, the library must known the *private key* or the *secret* to be used to decrypt the token received. It's has been defined with the OP.
+
+To verify the JWS, the library use the *client_secret* or the OP *jwks_uri* like the process of a JWS *id_token*.
+
+In the examples, you have instantiate $client like seen before. You must set the parameters below before calling *tokens* methods or *userInfo* method
+
+Cases :
+ - **The key to be used is the client_secret** :
+ You have nothing to do
+
+ - **The key is a shared key (secret)** :
+```PHP
+
+$client->keysManager()
+  ->use_for_encDec(),
+  ->set_kid('The key Id of the key') //OPTIONNAL
+  ->set_secret_key('the_secret')
+  ->build();
+```
+
+- **The private key is a PEM file** :
+```PHP
+
+$client->keysManager()
+  ->use_for_encDec(),
+  ->set_kid('The key Id of the key') //OPTIONNAL
+  ->set_private_key_pem_file('/path/to/privateKey.pem')
+  ->build();
+```
+
+- **Use of a P12 certificate** :
+```PHP
+
+$client->keysManager()
+  ->use_for_encDec(),
+  ->set_kid('The key Id of the key') //OPTIONNAL
+  ->set_p12_file('/path/to/certificate.pfx')
+  ->build();
+```
+
+### UserInfo response encrypted (JWE)
+If the userInfo response is not a Nested JWT, but: 
+- a JWE with a json payload : [do like for a Nested JWT](#nested-jwt)
+- a JWS : Nothing to do 
+- a JSON : Nothing to do
 
 ## Utils
 
@@ -676,28 +810,5 @@ JWS are supported for authentication. The OP must be configured with your asymet
 For security reasons, you have to renew your keys periodically and give to the OP the new public key for asymetric keys.
 
 
-## Actually not supported
 
-### JWE
 
-The *id_token*, the *userInfo* and others request and client authentication mode can been encrypted (https://openid.net/specs/openid-connect-core-1_0.html#SigEnc).
-
-The Json Web Encryption (JWE) is actually not supported by the library.
-
-The OP should specify (it's optional) in it's discovery url the type of encryption supported : 
-- id_token_encryption_alg_values_supported
-- id_token_encryption_enc_values_supported 
-- userinfo_encryption_alg_values_supported
-- userinfo_encryption_enc_values_supported
-- request_object_encryption_alg_values_supported
-- request_object_encryption_enc_values_supported
-
-For asymetric keys (RSA or EC), you have to know the private key and the OP the public key. For symetric key (may be the *client_secret*), you and the OP must known it.
-
----
-
-### Dynamic registration
-
-https://openid.net/specs/openid-connect-registration-1_0.html
-
-The dynamic registration to an OP is actually not supported.

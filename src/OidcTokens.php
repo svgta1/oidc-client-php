@@ -1,6 +1,7 @@
 <?php
 namespace Svgta;
 use Svgta\OidcException as Exception;
+use Jose\Component\Core\JWK;
 
 class OidcTokens
 {
@@ -24,6 +25,7 @@ class OidcTokens
   private $auth_method = null;
   private $privateKey = null;
   private $sigAlg = null;
+  private $headerOptions = [];
 
   public function __construct(array $HttpRequest, string $client_id, OidcRequest $request, ?string $client_secret = null, OidcSession $session){
     OidcUtils::setDebug(__CLASS__, __FUNCTION__);
@@ -43,8 +45,8 @@ class OidcTokens
     $tokens = $this->getTokensFromSession();
     if(!isset($tokens['id_token']))
       throw new Exception('id_token not knwon');
-    $parse = OidcJWT::parseJWS($tokens['id_token']);
-    return $parse['payload'];
+    $res = $this->get_id_token_info($id_token);
+    return $res['payload'];
   }
 
   public function introspect_token(string $token, ?string $type = null): array{
@@ -182,6 +184,7 @@ class OidcTokens
       $this->getAuthMethod(false);
       $auth_method = $this->auth_method;
     }
+
     switch($auth_method){
       case 'client_secret_basic':
         $params['auth'] = [$this->client_id, $this->client_secret];
@@ -195,24 +198,34 @@ class OidcTokens
           throw new Exception('The client_secret is not set');
         $jwt = OidcJWT::gen_client_secret_jwt($this->client_secret, $this->client_id, $this->session->get('FI_PARAMS')->token_endpoint);
         if(!is_null($this->sigAlg))
-          $jwt->setAlg($this->sigAlg);
+          $jwt->setSigAlg($this->sigAlg);
         $params['form_params']['client_id'] = $this->client_id;
         $params['form_params']['client_assertion_type'] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
-        $params['form_params']['client_assertion'] = $jwt->signPayload();
+        $params['form_params']['client_assertion'] = $jwt->signPayloadAuth($this->headerOptions);
         break;
       case 'private_key_jwt':
-        if(is_null($this->privateKey))
+        if(is_null(OidcKeys::get_private_key_sign()))
           throw new Exception('The privateKey is not set for private_key_jwt authentication');
-        $jwt = OidcJWT::gen_private_key_jwt($this->privateKey, $this->client_id, $this->session->get('FI_PARAMS')->token_endpoint);
+        $jwt = OidcJWT::gen_private_key_jwt(OidcKeys::get_private_key_sign(), $this->client_id, $this->session->get('FI_PARAMS')->token_endpoint);
         if(!is_null($this->sigAlg))
-          $jwt->setAlg($this->sigAlg);
+          $jwt->setSigAlg($this->sigAlg);
         $params['form_params']['client_id'] = $this->client_id;
         $params['form_params']['client_assertion_type'] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
-        $params['form_params']['client_assertion'] = $jwt->signPayload();
+        $params['form_params']['client_assertion'] = $jwt->signPayloadAuth($this->headerOptions);
         break;
     }
     OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['params'=> $params]);
     return $params;
+  }
+
+  public function jwt_headers_options($key){
+    $pubKey = OidcKeys::get_public_key_sign();
+    if(is_null($pubKey))
+      throw new Exception('The public key or certificate must be set before calling this option');
+    if(!$pubKey->has($key))
+      throw new Exception('The public key or certificate do not have ' . $key . ' parameter');
+    if(!in_array($key, $this->headerOptions))
+      $this->headerOptions[] = $key;
   }
 
   public function get_tokens(): array{
@@ -232,7 +245,6 @@ class OidcTokens
     }
     $grant_type = 'authorization_code';
     $this->test_grant_type($grant_type);
-    $flowType = $this->session->get('flowType');
     if($flowType == 'implicit'){
       if(is_null($this->session->get('tokens')))
         throw new Exception('Not allowed for ' . $flowType . ' flow');
@@ -240,6 +252,7 @@ class OidcTokens
     }
     if(is_null($this->code))
       throw new Exception('Code not set');
+
     if(is_null($this->auth_method))
       $this->getAuthMethod();
     $authParams = $this->getAuthParams($this->auth_method);
@@ -267,19 +280,36 @@ class OidcTokens
     return $tokens;
   }
 
+  private function get_id_token_info(string $id_token): array{
+    $header = OidcJWT::getJWTHeader($id_token);
+    if(isset($header['enc'])){
+      $nested = $this->ctrlJWT_nested($id_token);
+      $payload = $nested['payload'];
+      $alg = $nested['header']['alg'];
+    }else{
+      $parse = OidcJWT::parseJWS($id_token);
+      $payload = $parse['payload'];
+      $alg = $parse['header']['alg'];
+      $this->ctrlJWT_sign($parse['ressource'], $alg, $id_token);
+    }
+
+    return [
+      'payload' => $payload,
+      'alg' => $alg,
+    ];
+  }
+
   private function ctrlIdToken(string $id_token, ?string $access_token): void{
     if(!is_null($access_token) && !is_string($access_token))
       throw new Exception('Bad type for access_token');
 
-    $parse = OidcJWT::parseJWS($id_token);
-    $payload = $parse['payload'];
+    $res = $this->get_id_token_info($id_token);
+    $payload = $res['payload'];
+    $alg = $res['alg'];
+
     if(!isset($payload['sub']))
       throw new Exception('sub claim is required in id_token');
-    $alg = $parse['header']['alg'];
-    if(isset($parse['header']['enc']))
-      throw new Exception('Encrypted id_token not supported');
 
-    $this->ctrlJWT_sign($parse['ressource'], $alg);
     $this->ctrlJWT_at_hash($payload, $access_token, $alg);
     $this->ctrlJWT_c_hash($payload, $alg);
     $this->ctrlJWT_time($payload);
@@ -289,6 +319,8 @@ class OidcTokens
   }
 
   private function getAuthMethod(bool $pkce = true): void{
+    if(!is_null($this->auth_method))
+      return;
     if($pkce && !is_null($this->session->get('code_verifier'))){
       $this->auth_method = 'pkce';
     }else{
@@ -296,7 +328,7 @@ class OidcTokens
       if(!isset($fi_config->token_endpoint_auth_methods_supported))
         $fi_config->token_endpoint_auth_methods_supported = ['client_secret_basic'];
       foreach(self::$default_auth_method_order as $method){
-        if(($method == "private_key_jwt") && is_null($this->privateKey))
+        if(($method == "private_key_jwt") && is_null(OidcKeys::get_private_key_sign()))
           continue;
         if(!in_array($method, $fi_config->token_endpoint_auth_methods_supported))
           continue;
@@ -314,26 +346,6 @@ class OidcTokens
     $this->sigAlg = $alg;
   }
 
-  public function setPrivateKeyFile(string $privateKeyPath, ?string $password = null): void{
-    $privateKey = is_file($privateKeyPath);
-    if(!$privateKey)
-      throw new Exception('The private key is not accessible');
-    $this->setPrivateKey(file_get_contents($privateKeyPath), $password);
-  }
-
-  public function setPrivateKey(string $pem, string $password = null): void{
-    $this->privateKey = [
-      'pem' => $pem,
-      'pwd' => $password
-    ];
-  }
-  public function setPrivateKeyKid(string $kid): void{
-    $this->privateKey['kid'] = $kid;
-  }
-  public function setPrivateKeyX5t(string $x5t): void{
-    $this->privateKey['x5t'] = $x5t;
-  }
-
   public function set_auth_method(string $method): void{
     if(!is_null($this->session->get('code_verifier'))){
       if($method !== 'pkce')
@@ -349,8 +361,8 @@ class OidcTokens
       if(!in_array($method, self::$default_auth_method_order))
         throw new Exception('Auth method not supported');
       if($method == 'private_key_jwt'){
-        if(is_null($this->privateKey))
-          throw new Exception('The private key is not set. Use setPrivateKey(string $privateKeyPath) method befor this one.');
+        if(is_null(OidcKeys::get_private_key_sign()))
+          throw new Exception('The private key must be set before this method.');
       }
       $this->auth_method = $method;
     }

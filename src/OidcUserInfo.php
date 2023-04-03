@@ -10,8 +10,9 @@ class OidcUserInfo
   private $access_token = null;
   private $id_token = null;
   private $client_id = null;
+  private $client_secret = null;
 
-  public function __construct(string $client_id, OidcRequest $request, ?string $access_token = null, ?string $id_token = null, OidcSession $session){
+  public function __construct(string $client_id, OidcRequest $request, ?string $access_token = null, ?string $id_token = null, OidcSession $session, ?string $client_secret = null){
     OidcUtils::setDebug(__CLASS__, __FUNCTION__);
     $this->session = $session;
     if(!is_null($access_token) && !is_string($access_token))
@@ -33,36 +34,66 @@ class OidcUserInfo
     $this->id_token = $id_token;
     $this->request = $request;
     $this->client_id = $client_id;
+    $this->client_secret = $client_secret;
+  }
+
+  private function get_JWT_info($jwt): array{
+    $header = OidcJWT::getJWTHeader($jwt);
+    if(isset($header['enc'])){
+      try{
+        $nested = $this->ctrlJWT_nested($jwt);
+        $payload = $nested['payload'];
+        $alg = $nested['header']['alg'];
+      }catch(\Throwable $t){
+        $payload = $this->ctrlJWT_enc($jwt);
+        $alg = null;
+      }
+
+    }else{
+      $parse = OidcJWT::parseJWS($jwt);
+      $payload = $parse['payload'];
+      $alg = $parse['header']['alg'];
+      $this->ctrlJWT_sign($parse['ressource'], $alg, $jwt);
+    }
+
+    return [
+      'payload' => $payload,
+      'alg' => $alg,
+    ];
   }
 
   public function get(): array{
     $res = $this->request->userInfo($this->access_token);
-    $parseIdToken = OidcJWT::parseJWS($this->id_token);
-    if(!isset($parseIdToken['payload']['sub']))
-      throw new Exception('sub claim is required in id_token');
-    $subId = $parseIdToken['payload']['sub'];
-
+    $ctrlSub = false;
+    $subId = null;
+    if(!is_null($this->id_token)){
+      $ctrlSub = true;
+      $id_token_info = $this->get_JWT_info($this->id_token);
+      if(!isset($id_token_info['payload']['sub']))
+        throw new Exception('sub claim is required in id_token');
+      $subId = $id_token_info['payload']['sub'];
+    }
     if(is_array($res)){
-      if(!isset($res['sub']))
+      if($ctrlSub && !isset($res['sub']))
         throw new Exception('sub claim required in userInfo response');
-      if($res['sub'] != $subId)
+      if($ctrlSub && ($res['sub'] != $subId))
         throw new Exception('Bad sub value');
       OidcUtils::setDebug(__CLASS__, __FUNCTION__, $res);
       return $res;
     }
 
-    $parseUserInfo = OidcJWT::parseJWS($res);
+    $parseUserInfo = $this->get_JWT_info($res);
     $payload = $parseUserInfo['payload'];
-    if(!isset($payload['sub']))
+    if($ctrlSub && !isset($payload['sub']))
       throw new Exception('sub claim required in userInfo response');
-    if($payload['sub'] != $subId)
+    if($ctrlSub && ($payload['sub'] != $subId))
       throw new Exception('Bad sub value');
 
-    $alg = $parseUserInfo['header']['alg'];
-    if(isset($parseUserInfo['header']['enc']))
-      throw new Exception('Encrypted userinfo not supported');
-
-    $this->ctrlJWT_sign($parseUserInfo['ressource'], $alg);
+    $alg = $parseUserInfo['alg'];
+    if(is_null($alg))
+      return $payload;
+    
+    $this->ctrlJWT_sign($parseUserInfo['ressource'], $alg, $res);
     $this->ctrlJWT_iss($payload);
     $this->ctrlJWT_aud($payload);
 

@@ -5,7 +5,20 @@ use Jose\Component\Signature\JWS;
 
 trait OidcJWTVerifyTrait
 {
-  private function ctrlJWT_sign(JWS $ressource, string $alg): void{
+  private function ctrlJWT_enc(string $jwe): array{
+    $res = OidcJWT::decrypt($jwe, $this->request->jwk_uri(), $this->client_secret);
+    return json_decode($res, TRUE);
+  }
+  private function ctrlJWT_nested(string $jwe): array{
+    $res = OidcJWT::NestedLoader($jwe, $this->request->jwk_uri(), $this->client_secret);
+    $ressource = $res['ressource'];
+    $signId = $res['signature'];
+    return [
+      'payload' => json_decode($ressource->getPayload(), TRUE),
+      'header' => $ressource->getSignature($signId)->getProtectedHeader()
+    ];
+  }
+  private function ctrlJWT_sign(JWS $ressource, string $alg, string $jwt): void{
     OidcUtils::setDebug(__CLASS__, __FUNCTION__);
     $alg_sig_accepted = OidcJWT::$alg_sig_accepted;
     $algAccepted = [];
@@ -15,14 +28,8 @@ trait OidcJWTVerifyTrait
     if(!in_array($alg, $algAccepted))
       throw new Exception('The JWT alg is not accepted');
 
-    $keySet = [];
-    $algType = substr($alg, 0, 2);
-    if($algType != 'HS' && $alg != 'none'){
-      $keySet = $this->request->jwk_uri();
-      OidcJWT::set_sign_params($alg, null, $keySet)->verifyJWSWithKeysSet($ressource);
-    }else{
-      OidcJWT::set_sign_params($alg, $this->client_secret, [])->verifyJWSWithKey($ressource);
-    }
+    $keySet = OidcKeys::genKeySetForVerif($this->request->jwk_uri(), $this->client_secret);
+    OidcJWT::set_sign_params($alg, $keySet)->verifyJWSWithKeysSet($jwt);
   }
 
   private function ctrlJWT_at_hash(array $payload, ?string $access_token = null, string $alg): void{
