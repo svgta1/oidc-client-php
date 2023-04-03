@@ -1,6 +1,6 @@
 <?php
-namespace Svgta;
-use Svgta\OidcException as Exception;
+namespace Svgta\OidcClient;
+use Svgta\OidcClient\OidcException as Exception;
 
 class OidcUserInfo
 {
@@ -92,7 +92,7 @@ class OidcUserInfo
     $alg = $parseUserInfo['alg'];
     if(is_null($alg))
       return $payload;
-    
+
     $this->ctrlJWT_sign($parseUserInfo['ressource'], $alg, $res);
     $this->ctrlJWT_iss($payload);
     $this->ctrlJWT_aud($payload);

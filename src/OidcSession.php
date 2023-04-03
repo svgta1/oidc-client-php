@@ -1,6 +1,6 @@
 <?php
-namespace Svgta;
-use Svgta\OidcException as Exception;
+namespace Svgta\OidcClient;
+use Svgta\OidcClient\OidcException as Exception;
 use MI\MCE\pwdApi\utils\JWK as apiJWK;
 use Jose\Component\Core\AlgorithmManager;
 use Jose\Component\Encryption\Compression\CompressionMethodManager;

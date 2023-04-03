@@ -19,6 +19,8 @@ The project organization is set like the that for the example :
 - *composer.json*
 - *composer.lock*
 
+**BUG on Azure the 04/03/2023** : the userInfo endpoint return *givenname* and not *given_name* ; same thing for *family_name*
+
 ## Authorization
 
 Create a script *authorization.php* in src. This script need to load the vendor *autoload.php* script. 
@@ -34,7 +36,7 @@ $client_id = 'yourClient_id';
 $session_key = 'YWQ4Q1Hpb_zQliS5wGYDDPZm2xC7PzyfjgLKBNodkazkN_pEPlm7yVBw5r9_pDzSwHJRsFVZShQyb_LFUSMBGQ';
 $callback_url = 'https://yourAPPurl/callback.php';
 
-$client = new Svgta\OidcClient($disco_url, $client_id);
+$client = new Svgta\OidcClient\init($disco_url, $client_id);
 $client->setSessionKey($session_key);
 
 $auth = $client->authorization($callback_url);
@@ -79,7 +81,7 @@ $cert_path = dirname(__FILE__, 2) . '/data/cert.pem';
 $privateKey_path = dirname(__FILE__, 2) . '/data/key.pem';
 $privateKey_secret = 'theSecretYouDefined';
 
-$client = new Svgta\OidcClient($disco_url, $client_id);
+$client = new Svgta\OidcClient\init($disco_url, $client_id);
 $client->setSessionKey($session_key);
 $client->keysManager()
     ->use_for_signVerify()
@@ -115,7 +117,7 @@ $cert_path = dirname(__FILE__, 2) . '/data/cert.pem';
 $privateKey_path = dirname(__FILE__, 2) . '/data/key.pem';
 $privateKey_secret = 'theSecretYouDefined';
 
-$client = new Svgta\OidcClient($disco_url, $client_id);
+$client = new Svgta\OidcClient\init($disco_url, $client_id);
 $client->setSessionKey($session_key);
 
 $tokenRes = $client->token();
@@ -154,12 +156,12 @@ $cert_path = dirname(__FILE__, 2) . '/data/cert.pem';
 $privateKey_path = dirname(__FILE__, 2) . '/data/key.pem';
 $privateKey_secret = 'theSecretYouDefined';
 
-$client = new Svgta\OidcClient($disco_url, $client_id);
+$client = new Svgta\OidcClient\init($disco_url, $client_id);
 $client->setSessionKey($session_key);
 
 $tokenRes = $client->token();
 $tokenRes->setPrivateKeyFile($privateKey_path, $privateKey_secret);
-$cert_Info = Svgta\OidcUtils::getCertInfoFile($cert_path);
+$cert_Info = Svgta\OidcClient\OidcUtils::getCertInfoFile($cert_path);
 $tokenRes->setPrivateKeyX5t($cert_info->x5t);
 
 $tokens = $tokenRes->getTokensFromSession();
@@ -186,7 +188,7 @@ $disco_url = 'https://login.microsoftonline.com/consumers/v2.0/.well-known/openi
 $session_key = 'YWQ4Q1Hpb_zQliS5wGYDDPZm2xC7PzyfjgLKBNodkazkN_pEPlm7yVBw5r9_pDzSwHJRsFVZShQyb_LFUSMBGQ';
 $logout_url_callback = 'https://yourAPPurl/callback.php';
 
-$client = new Svgta\OidcClient($disco_url);
+$client = new Svgta\OidcClient\init($disco_url);
 $client->setSessionKey($session_key);
 $client->logout(null, $logout_url_callback);
 ```

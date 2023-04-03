@@ -1,6 +1,6 @@
 <?php
-namespace Svgta;
-use Svgta\OidcException as Exception;
+namespace Svgta\OidcClient;
+use Svgta\OidcClient\OidcException as Exception;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Jose\Component\KeyManagement\JWKFactory;
 use Jose\Component\Core\Util\RSAKey;

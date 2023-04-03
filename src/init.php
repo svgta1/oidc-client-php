@@ -1,8 +1,8 @@
 <?php
-namespace Svgta;
-use Svgta\OidcException as Exception;
+namespace Svgta\OidcClient;
+use Svgta\OidcClient\OidcException as Exception;
 
-class OidcClient
+class init
 {
   private $welcomeUrl = null;
   private $client_id = null;
@@ -87,14 +87,17 @@ class OidcClient
     return new OidcAuthorization($this->client_id, $this->request, $redirectUri, $this->session);
   }
   public function token(array $request = []): OidcTokens{
+    $this->request->ctrlParams();
     $req = OidcUtils::getRequest($request);
     return new OidcTokens($req, $this->client_id, $this->request, $this->client_secret, $this->session);
   }
   public function userInfo(?string $access_token = null, ?string $id_token = null): array{
+    $this->request->ctrlParams();
     $res = new OidcUserInfo($this->client_id, $this->request, $access_token, $id_token, $this->session, $this->client_secret);
     return $res->get();
   }
   public function registration(?string $access_token = null){
+    $this->request->ctrlParams();
     return new OidcRegistration($this->request, $access_token);
   }
 }

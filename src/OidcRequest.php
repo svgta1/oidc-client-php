@@ -1,9 +1,9 @@
 <?php
-namespace Svgta;
+namespace Svgta\OidcClient;
 use GuzzleHttp\Client;
 use GuzzleHttp\Utils;
 use Psr\Http\Message\ResponseInterface;
-use Svgta\OidcException as Exception;
+use Svgta\OidcClient\OidcException as Exception;
 
 class OidcRequest
 {

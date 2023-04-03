@@ -17,7 +17,7 @@ $client_id = 'yourClient_id';
 $session_key = 'YWQ4Q1Hpb_zQliS5wGYDDPZm2xC7PzyfjgLKBNodkazkN_pEPlm7yVBw5r9_pDzSwHJRsFVZShQyb_LFUSMBGQ';
 $callback_url = 'https://yourAPPurl/callback.php';
 
-$client = new Svgta\OidcClient();
+$client = new Svgta\OidcClient\init();
 $client->setSessionKey($session_key);
 $client->client_id($client_id);
 $client->add_OP_info('authorization_endpoint', 'https://github.com/login/oauth/authorize');
@@ -39,7 +39,7 @@ $client_id = 'yourClient_id';
 $client_secret = 'yourClient_secret';
 $session_key = 'YWQ4Q1Hpb_zQliS5wGYDDPZm2xC7PzyfjgLKBNodkazkN_pEPlm7yVBw5r9_pDzSwHJRsFVZShQyb_LFUSMBGQ';
 
-$client = new Svgta\OidcClient();
+$client = new Svgta\OidcClient\init();
 $client->setSessionKey($session_key);
 $client->client_id($client_id);
 $client->client_secret($client_secret);

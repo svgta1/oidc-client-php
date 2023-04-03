@@ -72,7 +72,7 @@ require dirname(__FILE__, 2) . '/vendor/autoload.php';
 
 #### Basic usage
 ```PHP
-$client = new Svgta\OidcClient(
+$client = new Svgta\OidcClient\init(
   'https://id.provider.com/.well-known/openid-configuration',
   'Your_client_id',
   'Your_client_secret', //OPTIONNAL, depend on flow used
@@ -80,7 +80,7 @@ $client = new Svgta\OidcClient(
 $client->setSessionKey('aSecureKey'); //RECOMMENDED, encrypt datas in the session
 
 // OR
-$client = new Svgta\OidcClient('https://id.provider.com/.well-known/openid-configuration');
+$client = new Svgta\OidcClient\init('https://id.provider.com/.well-known/openid-configuration');
 $client->setSessionKey('aSecureKey'); //RECOMMENDED, encrypt datas in the session
 $client->client_id('Your_client_id');
 $client->client_secret('Your_client_secret');
@@ -88,7 +88,7 @@ $client->client_secret('Your_client_secret');
 
 if the /.well-known/openid-configuration does not exist, you can add the OP informations manually :
 ```PHP
-  $client = new Svgta\OidcClient();
+  $client = new Svgta\OidcClient\init();
   $client->setSessionKey('aSecureKey'); //RECOMMENDED, encrypt datas in the session
 
   $client->add_OP_info('authorization_endpoint', 'https://id.provider.com/auth');
@@ -143,7 +143,7 @@ $client->request->addOtherParam('debug', true);
 #### Log level
 The default log level is `LOG_ERR`. To change it : 
 ```PHP
-Svgta\OidcClient::setLogLevel(LOG_DEBUG);
+Svgta\OidcClient\init::setLogLevel(LOG_DEBUG);
 ```
 The parameter is an PHP constant in this list : 
 - LOG_EMERG
@@ -174,7 +174,7 @@ Basic usage default :
 
 Example of general usage
 ```PHP
-$client = new Svgta\OidcClient(
+$client = new Svgta\OidcClient\init(
   'https://id.provider.com/.well-known/openid-configuration',
   'Your_client_id'
 );
@@ -263,7 +263,7 @@ The library try to choose the best authentication method depending of the OP opt
 - **private_key_jwt** (no client_secret needed)
 
 ```PHP
-$client = new Svgta\OidcClient(
+$client = new Svgta\OidcClient\init(
   'https://id.provider.com/.well-known/openid-configuration',
   'Your_client_id',
   'Your_client_secret'
@@ -390,7 +390,7 @@ Generaly used by the callback url after the authorization on the OP for code or 
 Basic usage :
 
 ```PHP
-$client = new Svgta\OidcClient(
+$client = new Svgta\OidcClient\init(
   'https://id.provider.com/.well-known/openid-configuration',
   'Your_client_id',
   'Your_client_secret'
@@ -414,7 +414,7 @@ If your OP don't accept it, you can not used it.
 Basic usage :
 
 ```PHP
-$client = new Svgta\OidcClient(
+$client = new Svgta\OidcClient\init(
   'https://id.provider.com/.well-known/openid-configuration',
   'Your_client_id',
   'Your_client_secret'
@@ -435,7 +435,7 @@ This flow is used when applications request an *access_token* to access their ow
 Basic usage :
 
 ```PHP
-$client = new Svgta\OidcClient(
+$client = new Svgta\OidcClient\init(
   'https://id.provider.com/.well-known/openid-configuration',
   'Your_client_id',
   'Your_client_secret'
@@ -458,7 +458,7 @@ To get new *access_token* and *id_token*. The refresh_token must be send with th
 Basic usage :
 
 ```PHP
-$client = new Svgta\OidcClient(
+$client = new Svgta\OidcClient\init(
   'https://id.provider.com/.well-known/openid-configuration',
   'Your_client_id',
   'Your_client_secret'
@@ -487,7 +487,7 @@ Based on rfc7662 (https://www.rfc-editor.org/rfc/rfc7662), the token must be an 
 
 **Usage :**
 ```PHP
-$client = new Svgta\OidcClient(
+$client = new Svgta\OidcClient\init(
   'https://id.provider.com/.well-known/openid-configuration',
   'Your_client_id',
   'Your_client_secret'
@@ -521,7 +521,7 @@ The OP must have *revocation_endpoint* set.
 
 **Usage :**
 ```PHP
-$client = new Svgta\OidcClient(
+$client = new Svgta\OidcClient\init(
   'https://id.provider.com/.well-known/openid-configuration',
   'Your_client_id',
   'Your_client_secret'
@@ -553,7 +553,7 @@ The library support the response in *json* format and *jwt* (jwt signed by the O
 
 
 ```PHP
-$client = new Svgta\OidcClient(
+$client = new Svgta\OidcClient\init(
   'https://id.provider.com/.well-known/openid-configuration',
   'Your_client_id',
   'Your_client_secret'
@@ -594,7 +594,7 @@ The *redirect_uri* can be used by the OP to redirect the user to the page define
 
 Basic :
 ```PHP
-$client = new Svgta\OidcClient(
+$client = new Svgta\OidcClient\init(
   'https://id.provider.com/.well-known/openid-configuration'
 );
 
@@ -667,11 +667,11 @@ You can use openssl if you prefer. The library offers you the possibility to gen
 
 ```PHP
 // RSA
-  $RsaKey = Svgta\OidcUtils::genRSAKey();
+  $RsaKey = Svgta\OidcClient\OidcUtils::genRSAKey();
   // default 2048 length. To change length : Svgta\OidcUtils::genRSAKey(4096);
 
 // EC
-  $ECKey = Svgta\OidcUtils::genEcKey();
+  $ECKey = Svgta\OidcClient\OidcUtils::genEcKey();
   // default curve P-256. To change curve : Svgta\OidcUtils::genEcKey('P-521');
 ```
 
@@ -725,7 +725,7 @@ openssl ec -in key.pem -pubout -out public.pem
 ### Generate an UUID
 
 ```PHP
-$uuid = Svgta\OidcUtils::genUUID();
+$uuid = Svgta\OidcClient\OidcUtils::genUUID();
 ```
 **Response**
 ```shell
@@ -738,9 +738,9 @@ uuid: dd5c827b-9c8a-4831-913e-f5cbec7195c4
 By default, the key generated is 512 bits long. You can change it if needed.
 
 ```PHP
-$key_1 = Svgta\OidcUtils::randomString();
-$key_2 = Svgta\OidcUtils::randomString(1024);
-$key_3 = Svgta\OidcUtils::randomString(64);
+$key_1 = Svgta\OidcClient\OidcUtils::randomString();
+$key_2 = Svgta\OidcClient\OidcUtils::randomString(1024);
+$key_3 = Svgta\OidcClient\OidcUtils::randomString(64);
 ```
 
 **Response**
@@ -764,13 +764,13 @@ Get informations from a varaiable :
 // Certificate informations to PEM format
 -----END CERTIFICATE-----
   EOD;
-  $res = \Svgta\OidcUtils::getCertInfo($cert);
+  $res = \Svgta\OidcClient\OidcUtils::getCertInfo($cert);
 ```
 
 Get informations from a file : 
 ```PHP
   $path = '../pathTotheCertDir/myCert.crt';
-  $res = \Svgta\OidcUtils::getCertInfoFile($path);
+  $res = \Svgta\OidcClient\OidcUtils::getCertInfoFile($path);
 ```
 
 Response example :
@@ -797,9 +797,9 @@ stdClass Object
 The response is a boolean.
 
 ```PHP
-$isJson = Svgta\Oidcutils::isJson('My string');
+$isJson = Svgta\OidcClient\Oidcutils::isJson('My string');
 // false;
-$isJson = Svgta\Oidcutils::isJson('{"key": "first", "value": "test"}');
+$isJson = Svgta\OidcClient\Oidcutils::isJson('{"key": "first", "value": "test"}');
 // true;
 ```
 

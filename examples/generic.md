@@ -35,7 +35,7 @@ $client_id = 'yourClient_id';
 $session_key = 'YWQ4Q1Hpb_zQliS5wGYDDPZm2xC7PzyfjgLKBNodkazkN_pEPlm7yVBw5r9_pDzSwHJRsFVZShQyb_LFUSMBGQ';
 $callback_url = 'https://yourAPPurl/callback.php';
 
-$client = new Svgta\OidcClient($disco_url, $client_id);
+$client = new Svgta\OidcClient\init($disco_url, $client_id);
 $client->setSessionKey($session_key);
 
 $auth = $client->authorization($callback_url);
@@ -63,7 +63,7 @@ $client_id = 'yourClient_id';
 $client_secret = 'yourClient_secret';
 $session_key = 'YWQ4Q1Hpb_zQliS5wGYDDPZm2xC7PzyfjgLKBNodkazkN_pEPlm7yVBw5r9_pDzSwHJRsFVZShQyb_LFUSMBGQ';
 
-$client = new Svgta\OidcClient($disco_url, $client_id, $client_secret);
+$client = new Svgta\OidcClient\init($disco_url, $client_id, $client_secret);
 $client->setSessionKey($session_key);
 
 $tokenRes = $client->token();
@@ -91,7 +91,7 @@ $client_id = 'yourClient_id';
 $client_secret = 'yourClient_secret';
 $session_key = 'YWQ4Q1Hpb_zQliS5wGYDDPZm2xC7PzyfjgLKBNodkazkN_pEPlm7yVBw5r9_pDzSwHJRsFVZShQyb_LFUSMBGQ';
 
-$client = new Svgta\OidcClient($disco_url, $client_id, $client_secret);
+$client = new Svgta\OidcClient\init($disco_url, $client_id, $client_secret);
 $client->setSessionKey($session_key);
 
 $tokenRes = $client->token();
@@ -125,7 +125,7 @@ $client_id = 'yourClient_id';
 $client_secret = 'yourClient_secret';
 $session_key = 'YWQ4Q1Hpb_zQliS5wGYDDPZm2xC7PzyfjgLKBNodkazkN_pEPlm7yVBw5r9_pDzSwHJRsFVZShQyb_LFUSMBGQ';
 
-$client = new Svgta\OidcClient($disco_url, $client_id, $client_secret);
+$client = new Svgta\OidcClient\init($disco_url, $client_id, $client_secret);
 $client->setSessionKey($session_key);
 
 $tokenRes = $client->token();
@@ -152,7 +152,7 @@ $disco_url = 'https://Provider.tld/.well-known/openid-configuration';
 $logout_url_callback = 'https://yourAPPurl/callback.php';
 $session_key = 'YWQ4Q1Hpb_zQliS5wGYDDPZm2xC7PzyfjgLKBNodkazkN_pEPlm7yVBw5r9_pDzSwHJRsFVZShQyb_LFUSMBGQ';
 
-$client = new Svgta\OidcClient($disco_url);
+$client = new Svgta\OidcClient\init($disco_url);
 $client->setSessionKey($session_key);
 
 $client->logout(null, $logout_url_callback);

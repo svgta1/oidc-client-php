@@ -1,6 +1,6 @@
 <?php
-namespace Svgta;
-use Svgta\OidcException as Exception;
+namespace Svgta\OidcClient;
+use Svgta\OidcClient\OidcException as Exception;
 use Jose\Component\Signature\JWS;
 
 trait OidcJWTVerifyTrait

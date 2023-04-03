@@ -1,6 +1,6 @@
 <?php
-namespace Svgta;
-use Svgta\OidcException as Exception;
+namespace Svgta\OidcClient;
+use Svgta\OidcClient\OidcException as Exception;
 use Jose\Component\KeyManagement\JWKFactory;
 use Jose\Component\Core\JWK;
 use Jose\Component\Core\AlgorithmManager;
@@ -309,21 +309,6 @@ class OidcJWT
     $res->setSigAlg($alg);
     return $res;
   }
-  /*public static function set_sign_params(string $alg, ?string $client_secret = null, array $keySet = []): self{
-    $key = null;
-    if($alg == 'none')
-      $key = JWKFactory::createNoneKey();
-    if(substr($alg, 0, 2) == 'HS')
-      $key = OidcKeys::genSecretKey($client_secret);
-      //$key = JWKFactory::createFromSecret($client_secret,[
-      //  'use' => 'sig',
-      //]);
-    if(is_null($key))
-      $key = JWKSet::createFromKeyData($keySet);
-    $res = new self($key);
-    $res->setSigAlg($alg);
-    return $res;
-  }*/
 
   private function set_client_id(string $client_id): void{
     $this->client_id = $client_id;
@@ -388,18 +373,12 @@ class OidcJWT
   }
 
   public static function gen_none_jwt(string $client_id, string $endpoint): self{
-    //$key = JWKFactory::createNoneKey();
-    //$res = new self($key);
     $res = new self(OidcKeys::getNoneKey());
     $res->set_client_id($client_id);
     $res->set_endpoint($endpoint);
     return $res;
   }
   public static function gen_client_secret_jwt(string $client_secret, string $client_id, string $endpoint): self{
-    //$key = JWKFactory::createFromSecret($client_secret,[
-    //  'use' => 'sig',
-    //]);
-    //$res = new self($key);
     $res = new self(OidcKeys::genSecretKey($client_secret));
     $res->set_client_id($client_id);
     $res->set_endpoint($endpoint);
