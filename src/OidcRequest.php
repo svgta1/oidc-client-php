@@ -2,6 +2,7 @@
 namespace Svgta;
 use GuzzleHttp\Client;
 use GuzzleHttp\Utils;
+use Psr\Http\Message\ResponseInterface;
 use Svgta\OidcException as Exception;
 
 class OidcRequest
@@ -17,124 +18,155 @@ class OidcRequest
     $this->client = new Client();
     $this->session = $session;
   }
+
+  public function deleteRegistration(array $params, string $url): array{
+    $params = array_merge($this->params, $params);
+    $res = $this->doRequest('DELETE', $url, $params);
+    $ret = $this->contentType_json($res);
+    if(is_null($ret))
+      throw new Exception("Content Type not supported for OIDC dynamic registration deletion" . $res->getHeader('Content-Type')[0]);
+
+    if(isset($ar['error']))
+      throw new Exception(json_encode($ar));
+
+    return $ret;
+  }
+
+  public function updateRegistration(array $params, string $url): array{
+    $params = array_merge($this->params, $params);
+    $res = $this->doRequest('PUT', $url, $params);
+    $ret = $this->contentType_json($res);
+    if(is_null($ret))
+      throw new Exception("Content Type not supported for OIDC dynamic registration updating" . $res->getHeader('Content-Type')[0]);
+
+    if(isset($ar['error']))
+      throw new Exception(json_encode($ar));
+
+    return $ret;
+  }
+
+  public function registration(array $params): array{
+    $endpoint = $this->ctrlParamsRegistration();
+    $params = array_merge($this->params, $params);
+    $res = $this->doRequest('POST', $endpoint, $params);
+    $ret = $this->contentType_json($res);
+    if(is_null($ret))
+      throw new Exception("Content Type not supported for OIDC dynamic registration " . $res->getHeader('Content-Type')[0]);
+
+    if(isset($ar['error']))
+      throw new Exception(json_encode($ar));
+
+    return $ret;
+  }
+
   public function introspect_token(array $params): array{
     $endpoint = $this->ctrlParamsIntro();
     $params = array_merge($this->params, $params);
-    try{
-      $res = $this->client->request('POST', $endpoint, $params);
-    }catch(\GuzzleHttp\Exception\ClientException $e){
-      throw new Exception(json_encode([
-        'code' => $e->getCode(),
-        'msg' => $e->getMessage()
-      ]));
-    }catch(\GuzzleHttp\Exception\RequestException $e){
-      throw new Exception($e->getMessage());
-    }
-    $contentType = $res->getHeader('Content-Type')[0];
-    if(preg_match('/^application\/json/', $contentType)){
-      $ar = json_decode($res->getBody(), true);
-      return $ar;
-    }
-    if(preg_match('/^application\/x-www-form-urlencoded/', $contentType)){
-      $contents = urldecode($res->getBody()->getContents());
-      $ar = [];
-      foreach(explode('&', $contents) as $content){
-        list($param, $value) = explode("=", $content);
-        $ar[$param] = $value;
-      }
-      if(isset($ar['error']))
-        throw new Exception(json_encode($ar));
+    $res = $this->doRequest('POST', $endpoint, $params);
+    $ret = $this->contentType_json($res);
+    if(is_null($ret))
+      $ret = $this->contentType_form($res);
+    if(is_null($ret))
+      throw new Exception("Content Type not supported for OIDC instrospection " . $res->getHeader('Content-Type')[0]);
 
-      return $ar;
-    }
+    if(isset($ar['error']))
+      throw new Exception(json_encode($ar));
+
+    return $ret;
   }
   public function revocation_endpoint(array $params): array{
     $endpoint = $this->ctrlParamsRevoc();
     $params = array_merge($this->params, $params);
-    try{
-      $res = $this->client->request('POST', $endpoint, $params);
-    }catch(\GuzzleHttp\Exception\ClientException $e){
-      throw new Exception(json_encode([
-        'code' => $e->getCode(),
-        'msg' => $e->getMessage()
-      ]));
-    }catch(\GuzzleHttp\Exception\RequestException $e){
-      throw new Exception($e->getMessage());
-    }
-    $contentType = $res->getHeader('Content-Type')[0];
-    if(preg_match('/^application\/json/', $contentType)){
-      $ar = json_decode($res->getBody(), true);
-      return $ar;
-    }
-    if(preg_match('/^application\/x-www-form-urlencoded/', $contentType)){
-      $contents = urldecode($res->getBody()->getContents());
-      $ar = [];
-      foreach(explode('&', $contents) as $content){
-        list($param, $value) = explode("=", $content);
-        $ar[$param] = $value;
-      }
-      if(isset($ar['error']))
-        throw new Exception(json_encode($ar));
+    $res = $this->doRequest('POST', $endpoint, $params);
+    $ret = $this->contentType_json($res);
+    if(is_null($ret))
+      $ret = $this->contentType_form($res);
+    if(is_null($ret))
+      throw new Exception("Content Type not supported for OIDC revocation " . $res->getHeader('Content-Type')[0]);
 
-      return $ar;
-    }
+    if(isset($ar['error']))
+      throw new Exception(json_encode($ar));
 
-    return [
-      'response' => $res->getBody()->getContents(),
-      'contentType' => $contentType,
-    ];
+    return $ret;
   }
 
   public function userInfo(string $access_token){
     $params = ['headers' => ['Authorization' => 'Bearer ' . $access_token]];
     $params = array_merge($this->params, $params);
     $endpoint = $this->ctrlParamsUserInfo();
-    try{
-      $res = $this->client->request('GET', $endpoint, $params);
-    }catch(\GuzzleHttp\Exception\ClientException $e){
-      throw new Exception(json_encode([
-        'code' => $e->getCode(),
-        'msg' => $e->getMessage()
-      ]));
-    }catch(\GuzzleHttp\Exception\RequestException $e){
-      throw new Exception($e->getMessage());
-    }
-    $contentType = $res->getHeader('Content-Type')[0];
-    if(preg_match('/^application\/json/', $contentType)){
-      $ar = json_decode($res->getBody(), true);
-      return $ar;
-    }
-    if(preg_match('/^application\/jwt/', $contentType)){
-      return $res->getBody()->getContents();
-    }
-    throw new Exception("Content Type not supported for OIDC jwks_uri " . $contentType);
+    $res = $this->doRequest('GET', $endpoint, $params);
+    $ret = $this->contentType_json($res);
+    if(is_null($ret))
+      $ret = $this->contentType_jwt($res);
+
+    if(is_null($ret))
+      throw new Exception("Content Type not supported for OIDC jwks_uri " . $res->getHeader('Content-Type')[0]);
+
+    return $ret;
   }
 
   public function jwk_uri(): array{
     $endpoint = $this->ctrlParamsJwkUri();
-    try{
-      $res = $this->client->request('GET', $endpoint, $this->params);
-    }catch(\GuzzleHttp\Exception\ClientException $e){
-      throw new Exception(json_encode([
-        'code' => $e->getCode(),
-        'msg' => $e->getMessage()
-      ]));
-    }catch(\GuzzleHttp\Exception\RequestException $e){
-      throw new Exception($e->getMessage());
-    }
-    $contentType = $res->getHeader('Content-Type')[0];
-    if(preg_match('/^application\/json/', $contentType)){
-      $ar = json_decode($res->getBody(), true);
-      return $ar;
-    }
-    throw new Exception("Content Type not supported for OIDC jwks_uri " . $contentType);
+    $res = $this->doRequest('GET', $endpoint, $this->params);
+    $ret = $this->contentType_json($res);
+    if(is_null($ret))
+      throw new Exception("Content Type not supported for OIDC jwks_uri " . $res->getHeader('Content-Type')[0]);
+
+    return $ret;
   }
 
   public function getTokens(array $params): array{
     $endpoint = $this->ctrlParamsToken();
     $params = array_merge($this->params, $params);
+    $res = $this->doRequest('POST', $endpoint, $params);
+
+    $ret = $this->contentType_json($res);
+    if(is_null($ret))
+      $ret = $this->contentType_form($res);
+    if(is_null($ret))
+      throw new Exception("Content Type not supported for OIDC get tokens " . $res->getHeader('Content-Type')[0]);
+
+    if(isset($ar['error']))
+      throw new Exception(json_encode($ar));
+
+    return $ret;
+  }
+
+  private function contentType_jwt(ResponseInterface $res): ?array{
+    $contentType = $res->getHeader('Content-Type')[0];
+    return $res->getBody()->getContents();
+  }
+
+  private function contentType_form(ResponseInterface $res): ?array{
+    $contentType = $res->getHeader('Content-Type')[0];
+    if(preg_match('/^application\/x-www-form-urlencoded/', $contentType)){
+      $contents = urldecode($res->getBody()->getContents());
+      $ar = [];
+      foreach(explode('&', $contents) as $content){
+        list($param, $value) = explode("=", $content);
+        $ar[$param] = $value;
+      }
+      if(isset($ar['error']))
+        throw new Exception(json_encode($ar));
+
+      return $ar;
+    }
+
+    return null;
+  }
+
+  private function contentType_json(ResponseInterface $res): ?array{
+    $contentType = $res->getHeader('Content-Type')[0];
+    if(preg_match('/^application\/json/', $contentType)){
+      $ar = json_decode($res->getBody(), true);
+      return $ar;
+    }
+    return null;
+  }
+
+  private function doRequest(string $method, string $uri, array $params): ResponseInterface{
     try{
-      $res = $this->client->request('POST', $endpoint, $params);
+      $res = $this->client->request($method, $uri, $params);
     }catch(\GuzzleHttp\Exception\ClientException $e){
       throw new Exception(json_encode([
         'code' => $e->getCode(),
@@ -144,24 +176,13 @@ class OidcRequest
     }catch(\GuzzleHttp\Exception\RequestException $e){
       throw new Exception($e->getMessage());
     }
-    $contentType = $res->getHeader('Content-Type')[0];
-    if(preg_match('/^application\/json/', $contentType)){
-      $ar = json_decode($res->getBody(), true);
-      return $ar;
-    }
-    if(preg_match('/^application\/x-www-form-urlencoded/', $contentType)){
-      $contents = urldecode($res->getBody()->getContents());
-      $ar = [];
-      foreach(explode('&', $contents) as $content){
-        list($param, $value) = explode("=", $content);
-        $ar[$param] = $value;
-      }
-      if(isset($ar['error']))
-        throw new Exception(json_encode($ar));
-
-      return $ar;
-    }
-    throw new Exception("Content Type not supported for OIDC get tokens " . $contentType);
+    return $res;
+  }
+  private function ctrlParamsRegistration(): string{
+    $fi_config = $this->ctrlParams();
+    if(!isset($fi_config->registration_endpoint))
+      throw new Exception('registration_endpoint not set');
+    return $fi_config->registration_endpoint;
   }
   private function ctrlParamsIntro(): string{
     $fi_config = $this->ctrlParams();
