@@ -45,7 +45,7 @@ class OidcTokens
     $tokens = $this->getTokensFromSession();
     if(!isset($tokens['id_token']))
       throw new Exception('id_token not knwon');
-    $res = $this->get_id_token_info($id_token);
+    $res = $this->get_id_token_info($tokens['id_token']);
     return $res['payload'];
   }
 

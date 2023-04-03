@@ -47,6 +47,7 @@ class init
       $logValue = json_encode($value);
     else
       $logValue = $value;
+    $this->request->ctrlParams();
     OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['key' => $key, 'value' => $logValue]);
     $fi_params = $this->session->get('FI_PARAMS');
     $fi_params->{$key} = $value;
