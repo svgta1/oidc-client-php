@@ -1,6 +1,10 @@
 <?php
 namespace Svgta\OidcClient;
 use Svgta\OidcClient\OidcException as Exception;
+use Svgta\OidcLib\OidcSession;
+use Svgta\OidcLib\OidcUtils;
+use Svgta\OidcLib\OidcJWTVerifyTrait;
+use Svgta\OidcLib\OidcJWT;
 
 class OidcUserInfo
 {

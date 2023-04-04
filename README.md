@@ -667,11 +667,11 @@ You can use openssl if you prefer. The library offers you the possibility to gen
 
 ```PHP
 // RSA
-  $RsaKey = Svgta\OidcClient\OidcUtils::genRSAKey();
+  $RsaKey = Svgta\OidcLib\OidcUtils::genRSAKey();
   // default 2048 length. To change length : Svgta\OidcUtils::genRSAKey(4096);
 
 // EC
-  $ECKey = Svgta\OidcClient\OidcUtils::genEcKey();
+  $ECKey = Svgta\OidcLib\OidcUtils::genEcKey();
   // default curve P-256. To change curve : Svgta\OidcUtils::genEcKey('P-521');
 ```
 
@@ -725,7 +725,7 @@ openssl ec -in key.pem -pubout -out public.pem
 ### Generate an UUID
 
 ```PHP
-$uuid = Svgta\OidcClient\OidcUtils::genUUID();
+$uuid = Svgta\OidcLib\OidcUtils::genUUID();
 ```
 **Response**
 ```shell
@@ -738,9 +738,9 @@ uuid: dd5c827b-9c8a-4831-913e-f5cbec7195c4
 By default, the key generated is 512 bits long. You can change it if needed.
 
 ```PHP
-$key_1 = Svgta\OidcClient\OidcUtils::randomString();
-$key_2 = Svgta\OidcClient\OidcUtils::randomString(1024);
-$key_3 = Svgta\OidcClient\OidcUtils::randomString(64);
+$key_1 = Svgta\OidcLib\OidcUtils::randomString();
+$key_2 = Svgta\OidcLib\OidcUtils::randomString(1024);
+$key_3 = Svgta\OidcLib\OidcUtils::randomString(64);
 ```
 
 **Response**
@@ -764,13 +764,13 @@ Get informations from a varaiable :
 // Certificate informations to PEM format
 -----END CERTIFICATE-----
   EOD;
-  $res = \Svgta\OidcClient\OidcUtils::getCertInfo($cert);
+  $res = \Svgta\OidcLib\OidcUtils::getCertInfo($cert);
 ```
 
 Get informations from a file : 
 ```PHP
   $path = '../pathTotheCertDir/myCert.crt';
-  $res = \Svgta\OidcClient\OidcUtils::getCertInfoFile($path);
+  $res = \Svgta\OidcLib\OidcUtils::getCertInfoFile($path);
 ```
 
 Response example :
@@ -797,17 +797,12 @@ stdClass Object
 The response is a boolean.
 
 ```PHP
-$isJson = Svgta\OidcClient\Oidcutils::isJson('My string');
+$isJson = Svgta\OidcLib\Oidcutils::isJson('My string');
 // false;
-$isJson = Svgta\OidcClient\Oidcutils::isJson('{"key": "first", "value": "test"}');
+$isJson = Svgta\OidcLib\Oidcutils::isJson('{"key": "first", "value": "test"}');
 // true;
 ```
 
-## Advanced security Supported 
-
-JWS are supported for authentication. The OP must be configured with your asymetric *publicKey*/*certificate* or your *client_secret* to verify the signature and accepts this mode of authentication (mode *private_key_jwt* OR *client_secret_jwt*).
-
-For security reasons, you have to renew your keys periodically and give to the OP the new public key for asymetric keys.
 
 
 

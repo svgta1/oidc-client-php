@@ -4,6 +4,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Utils;
 use Psr\Http\Message\ResponseInterface;
 use Svgta\OidcClient\OidcException as Exception;
+use Svgta\OidcLib\OidcSession;
 
 class OidcRequest
 {
@@ -151,7 +152,6 @@ class OidcRequest
 
       return $ar;
     }
-
     return null;
   }
 

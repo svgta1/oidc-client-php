@@ -2,6 +2,11 @@
 namespace Svgta\OidcClient;
 use Svgta\OidcClient\OidcException as Exception;
 use Jose\Component\Core\JWK;
+use Svgta\OidcLib\OidcSession;
+use Svgta\OidcLib\OidcUtils;
+use Svgta\OidcLib\OidcJWT;
+use Svgta\OidcLib\OidcKeys;
+use Svgta\OidcLib\OidcJWTVerifyTrait;
 
 class OidcTokens
 {

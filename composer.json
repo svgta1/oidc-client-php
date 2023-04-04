@@ -4,22 +4,7 @@
     "type": "library",
     "require": {
         "guzzlehttp/guzzle": "^7.5",
-        "web-token/jwt-core": "^3.1",
-        "web-token/jwt-key-mgmt": "^3.1",
-        "web-token/jwt-signature": "^3.1",
-        "web-token/jwt-signature-algorithm-hmac": "^3.1",
-        "web-token/jwt-signature-algorithm-ecdsa": "^3.1",
-        "web-token/jwt-signature-algorithm-rsa": "^3.1",
-        "web-token/jwt-signature-algorithm-eddsa": "^3.1",
-        "web-token/jwt-signature-algorithm-none": "^3.1",
-        "web-token/jwt-encryption-algorithm-aeskw": "^3.1",
-        "web-token/jwt-encryption-algorithm-aesgcmkw": "^3.1",
-        "web-token/jwt-encryption-algorithm-rsa": "^3.1",
-        "web-token/jwt-encryption-algorithm-aesgcm": "^3.1",
-        "web-token/jwt-encryption-algorithm-aescbc": "^3.1",
-        "web-token/jwt-encryption-algorithm-ecdh-es": "^3.1",
-        "web-token/jwt-encryption-algorithm-pbes2": "^3.1",
-        "web-token/jwt-nested-token": "^3.1"
+        "svgta/oidc-lib": "^0.1.0"
     },
     "license": "MIT",
     "autoload": {

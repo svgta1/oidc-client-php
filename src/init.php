@@ -1,6 +1,9 @@
 <?php
 namespace Svgta\OidcClient;
 use Svgta\OidcClient\OidcException as Exception;
+use Svgta\OidcLib\OidcUtils;
+use Svgta\OidcLib\OidcKeys;
+use Svgta\OidcLib\OidcSession;
 
 class init
 {
@@ -10,6 +13,8 @@ class init
   public $request = null;
   private $session = null;
 
+  const SESSION_NAME = "SvgtaOidcClient";
+
   public static function setLogLevel(int $level){
     OidcUtils::setLogLevel($level);
   }
@@ -17,6 +22,7 @@ class init
   public function __construct(?string $welcomeUrl = null, ?string $client_id = null, ?string $client_secret = null)
   {
     OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['welcomeUrl'=> $welcomeUrl]);
+    OidcSession::setSessionName(self::SESSION_NAME);
     $this->session = new OidcSession();
     $this->session->delete('FI_PARAMS');
     $this->welcomeUrl = $welcomeUrl;
@@ -27,7 +33,7 @@ class init
     $this->request = new OidcRequest($welcomeUrl, $this->session);
   }
 
-  public function keysManager(): oidcKeys{
+  public function keysManager(): OidcKeys{
     $this->request->ctrlParams();
     return new OidcKeys();
   }

@@ -1,6 +1,8 @@
 <?php
 namespace Svgta\OidcClient;
 use Svgta\OidcClient\OidcException as Exception;
+use Svgta\OidcLib\OidcSession;
+use Svgta\OidcLib\OidcUtils;
 
 class OidcAuthorization
 {
