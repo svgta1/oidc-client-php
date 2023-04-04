@@ -119,11 +119,14 @@ $privateKey_secret = 'theSecretYouDefined';
 
 $client = new Svgta\OidcClient\init($disco_url, $client_id);
 $client->setSessionKey($session_key);
+$client->keysManager()
+    ->use_for_signVerify()
+    ->set_private_key_pem_file($privateKey_path, $privateKey_secret)
+    ->set_x509_file($cert_path)
+    ->build();
 
 $tokenRes = $client->token();
-$tokenRes->setPrivateKeyFile($privateKey_path, $privateKey_secret);
-$cert_Info = Svgta\OidcUtils::getCertInfoFile($cert_path);
-$tokenRes->setPrivateKeyX5t($cert_info->x5t);
+$tokenRes->jwt_headers_options('x5t');
 
 $tokens = $tokenRes->getTokensFromSession();
 $newTokens = $tokenRes->refresh_token($refresh_token);
@@ -158,11 +161,14 @@ $privateKey_secret = 'theSecretYouDefined';
 
 $client = new Svgta\OidcClient\init($disco_url, $client_id);
 $client->setSessionKey($session_key);
+$client->keysManager()
+    ->use_for_signVerify()
+    ->set_private_key_pem_file($privateKey_path, $privateKey_secret)
+    ->set_x509_file($cert_path)
+    ->build();
 
 $tokenRes = $client->token();
-$tokenRes->setPrivateKeyFile($privateKey_path, $privateKey_secret);
-$cert_Info = Svgta\OidcClient\OidcUtils::getCertInfoFile($cert_path);
-$tokenRes->setPrivateKeyX5t($cert_info->x5t);
+$tokenRes->jwt_headers_options('x5t');
 
 $tokens = $tokenRes->getTokensFromSession();
 
