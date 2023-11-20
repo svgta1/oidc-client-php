@@ -79,11 +79,6 @@ class init
       ->set_kid('client_secret')
       ->set_secret_key($this->client_secret)
       ->build();
-    $oidcKeys
-      ->use_for_signVerify()
-      ->set_kid('client_secret')
-      ->set_secret_key($this->client_secret)
-      ->build();
   }
   public function authorization(string $redirectUri): OidcAuthorization{
     $this->request->ctrlParams();
