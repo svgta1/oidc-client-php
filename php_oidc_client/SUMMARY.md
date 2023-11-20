@@ -38,3 +38,9 @@
 * [Generate a security key](utils/generate-a-security-key.md)
 * [Get informations of a certificate](utils/get-informations-of-a-certificate.md)
 * [Verify if json](utils/verify-if-json.md)
+
+## Links
+
+* [Repo](https://github.com/svgta1/oidc-client-php)
+* [JWT Framework](https://web-token.spomky-labs.com/)
+* [Guzzle](https://docs.guzzlephp.org/en/stable/)
