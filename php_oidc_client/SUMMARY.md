@@ -42,5 +42,6 @@
 ## Links
 
 * [Repo](https://github.com/svgta1/oidc-client-php)
+* [OIDC specs](https://openid.net/developers/specs/)
 * [JWT Framework](https://web-token.spomky-labs.com/)
 * [Guzzle](https://docs.guzzlephp.org/en/stable/)
