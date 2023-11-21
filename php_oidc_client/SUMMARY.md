@@ -39,7 +39,7 @@
 * [Get informations of a certificate](utils/get-informations-of-a-certificate.md)
 * [Verify if json](utils/verify-if-json.md)
 
-## Links
+## Links / Credits
 
 * [Repo](https://github.com/svgta1/oidc-client-php)
 * [OIDC specs](https://openid.net/developers/specs/)
