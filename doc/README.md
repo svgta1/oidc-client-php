@@ -1,2 +1,0 @@
-# PHP Oidc-Client
-
