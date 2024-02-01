@@ -2,15 +2,15 @@
 namespace Svgta\OidcClient;
 use Svgta\OidcClient\OidcException as Exception;
 use Jose\Component\Core\JWK;
-use Svgta\OidcLib\OidcSession;
-use Svgta\OidcLib\OidcUtils;
-use Svgta\OidcLib\OidcJWT;
-use Svgta\OidcLib\OidcKeys;
-use Svgta\OidcLib\OidcJWTVerifyTrait;
+use Svgta\Lib\Session;
+use Svgta\Lib\Utils;
+use Svgta\Lib\JWT;
+use Svgta\Lib\Keys;
+use Svgta\Lib\JWTVerifyTrait;
 
 class OidcTokens
 {
-  use OidcJWTVerifyTrait;
+  use JWTVerifyTrait;
   private static $default_auth_method_order = [
     'private_key_jwt',
     'client_secret_jwt',
@@ -32,8 +32,8 @@ class OidcTokens
   private $sigAlg = null;
   private $headerOptions = [];
 
-  public function __construct(array $HttpRequest, string $client_id, OidcRequest $request, ?string $client_secret = null, OidcSession $session){
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__);
+  public function __construct(array $HttpRequest, string $client_id, OidcRequest $request, ?string $client_secret = null, Session $session){
+    Utils::setDebug(__CLASS__, __FUNCTION__);
     if(isset($HttpRequest['error'])){
       $desc = isset($HttpRequest['error_description']) ? $HttpRequest['error_description'] : $HttpRequest['error'];
       throw new Exception($desc);
@@ -76,7 +76,7 @@ class OidcTokens
       }
     }
     $response = $this->request->introspect_token($authParams);
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['response'=> $response]);
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['response'=> $response]);
     return $response;
   }
 
@@ -112,12 +112,12 @@ class OidcTokens
     }
     $response = $this->request->revocation_endpoint($authParams);
     $this->session->put('tokens', $tokens);
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['response'=> $response]);
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['response'=> $response]);
     return $response;
   }
 
   public function refresh_token(?string $refresh_token = null): array{
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['refresh_token'=> $refresh_token]);
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['refresh_token'=> $refresh_token]);
     $grant_type = 'refresh_token';
     $this->test_grant_type($grant_type);
     if(is_null($refresh_token)){
@@ -139,8 +139,8 @@ class OidcTokens
   }
 
   public function client_credentials(string $scopes = ''): array{
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['scopes'=> $scopes]);
-    OidcUtils::log(LOG_INFO, 'client_credentials flow is used when applications request an access_token to access their own resources.');
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['scopes'=> $scopes]);
+    Utils::log(LOG_INFO, 'client_credentials flow is used when applications request an access_token to access their own resources.');
     $grant_type = 'client_credentials';
     $this->test_grant_type($grant_type);
     if(is_null($this->auth_method))
@@ -153,8 +153,8 @@ class OidcTokens
   }
 
   public function password_grant(string $username, string $password): array{
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['username'=> $username, 'password' => 'not loggable info']);
-    OidcUtils::log(LOG_WARNING, 'The Password grant flow should not be used. See explaination on : https://www.oauth.com/oauth2-servers/access-tokens/password-grant/');
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['username'=> $username, 'password' => 'not loggable info']);
+    Utils::log(LOG_WARNING, 'The Password grant flow should not be used. See explaination on : https://www.oauth.com/oauth2-servers/access-tokens/password-grant/');
     $grant_type = 'password';
     $this->test_grant_type($grant_type);
     if(is_null($this->auth_method))
@@ -183,7 +183,7 @@ class OidcTokens
       $params['form_params']['code_verifier'] = $this->session->get('code_verifier');
       if(is_null($this->client_secret)){
         $params['form_params']['client_id'] = $this->client_id;
-        OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['params'=> $params]);
+        Utils::setDebug(__CLASS__, __FUNCTION__, ['params'=> $params]);
         return $params;
       }
       $this->getAuthMethod(false);
@@ -201,7 +201,7 @@ class OidcTokens
       case 'client_secret_jwt':
         if(is_null($this->client_secret))
           throw new Exception('The client_secret is not set');
-        $jwt = OidcJWT::gen_client_secret_jwt($this->client_secret, $this->client_id, $this->session->get('FI_PARAMS')->token_endpoint);
+        $jwt = JWT::gen_client_secret_jwt($this->client_secret, $this->client_id, $this->session->get('FI_PARAMS')->token_endpoint);
         if(!is_null($this->sigAlg))
           $jwt->setSigAlg($this->sigAlg);
         $params['form_params']['client_id'] = $this->client_id;
@@ -209,9 +209,9 @@ class OidcTokens
         $params['form_params']['client_assertion'] = $jwt->signPayloadAuth($this->headerOptions);
         break;
       case 'private_key_jwt':
-        if(is_null(OidcKeys::get_private_key_sign()))
+        if(is_null(Keys::get_private_key_sign()))
           throw new Exception('The privateKey is not set for private_key_jwt authentication');
-        $jwt = OidcJWT::gen_private_key_jwt(OidcKeys::get_private_key_sign(), $this->client_id, $this->session->get('FI_PARAMS')->token_endpoint);
+        $jwt = JWT::gen_private_key_jwt(Keys::get_private_key_sign(), $this->client_id, $this->session->get('FI_PARAMS')->token_endpoint);
         if(!is_null($this->sigAlg))
           $jwt->setSigAlg($this->sigAlg);
         $params['form_params']['client_id'] = $this->client_id;
@@ -219,12 +219,12 @@ class OidcTokens
         $params['form_params']['client_assertion'] = $jwt->signPayloadAuth($this->headerOptions);
         break;
     }
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['params'=> $params]);
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['params'=> $params]);
     return $params;
   }
 
   public function jwt_headers_options($key){
-    $pubKey = OidcKeys::get_public_key_sign();
+    $pubKey = Keys::get_public_key_sign();
     if(is_null($pubKey))
       throw new Exception('The public key or certificate must be set before calling this option');
     if(!$pubKey->has($key))
@@ -281,18 +281,18 @@ class OidcTokens
       $this->ctrlIdToken($tokens['id_token'], $access_token);
     }
     $this->session->put('tokens', $tokens);
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['tokens'=> $tokens]);
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['tokens'=> $tokens]);
     return $tokens;
   }
 
   private function get_id_token_info(string $id_token): array{
-    $header = OidcJWT::getJWTHeader($id_token);
+    $header = JWT::getJWTHeader($id_token);
     if(isset($header['enc'])){
       $nested = $this->ctrlJWT_nested($id_token);
       $payload = $nested['payload'];
       $alg = $nested['header']['alg'];
     }else{
-      $parse = OidcJWT::parseJWS($id_token);
+      $parse = JWT::parseJWS($id_token);
       $payload = $parse['payload'];
       $alg = $parse['header']['alg'];
       $this->ctrlJWT_sign($parse['ressource'], $alg, $id_token);
@@ -333,7 +333,7 @@ class OidcTokens
       if(!isset($fi_config->token_endpoint_auth_methods_supported))
         $fi_config->token_endpoint_auth_methods_supported = ['client_secret_basic'];
       foreach(self::$default_auth_method_order as $method){
-        if(($method == "private_key_jwt") && is_null(OidcKeys::get_private_key_sign()))
+        if(($method == "private_key_jwt") && is_null(Keys::get_private_key_sign()))
           continue;
         if(!in_array($method, $fi_config->token_endpoint_auth_methods_supported))
           continue;
@@ -344,7 +344,7 @@ class OidcTokens
         break;
       }
     }
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['auth_method' => $this->auth_method]);
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['auth_method' => $this->auth_method]);
   }
 
   public function setSigAlg(string $alg): void{
@@ -366,7 +366,7 @@ class OidcTokens
       if(!in_array($method, self::$default_auth_method_order))
         throw new Exception('Auth method not supported');
       if($method == 'private_key_jwt'){
-        if(is_null(OidcKeys::get_private_key_sign()))
+        if(is_null(Keys::get_private_key_sign()))
           throw new Exception('The private key must be set before this method.');
       }
       $this->auth_method = $method;
@@ -382,14 +382,14 @@ class OidcTokens
     $this->session->put('authParams', $this->authParams);
   }
   private function flowCode(): void{
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__);
+    Utils::setDebug(__CLASS__, __FUNCTION__);
     if(!isset($this->HttpRequest['code']))
       throw new Exception('Bad callback code return');
     $this->_ctrlState();
     $this->code = $this->HttpRequest['code'];
   }
   private function flowImplicit(): void{
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__);
+    Utils::setDebug(__CLASS__, __FUNCTION__);
     $this->_ctrlState();
     if(!isset($this->HttpRequest['id_token']))
       throw new Exception('Bad callback return. id_token is required');
@@ -410,7 +410,7 @@ class OidcTokens
     $this->session->put('tokens', $tokens);
   }
   private function flowHybrid(): void{
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__);
+    Utils::setDebug(__CLASS__, __FUNCTION__);
     if(isset($this->HttpRequest['id_token']))
       $this->flowImplicit();
     $this->session->delete('tokens');

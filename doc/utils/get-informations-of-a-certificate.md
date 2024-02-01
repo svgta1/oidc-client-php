@@ -8,21 +8,21 @@ The certificate must be in PEM format. The result is a stdClass object. Two mét
 Get informations from a variable :
 
 ```php
-use Svgta\OidcLib\OidcUtils;
+use Svgta\Lib\Utils;
 
   $cert = <<<EOD
   -----BEGIN CERTIFICATE-----
 // Certificate informations to PEM format
 -----END CERTIFICATE-----
   EOD;
-  $res = OidcUtils::getCertInfo($cert);
+  $res = Utils::getCertInfo($cert);
 ```
 
 Get informations from a file :
 
 ```php
   $path = '../pathTotheCertDir/myCert.crt';
-  $res = OidcUtils::getCertInfoFile($path);
+  $res = Utils::getCertInfoFile($path);
 ```
 
 Response example :

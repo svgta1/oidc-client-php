@@ -4,7 +4,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Utils;
 use Psr\Http\Message\ResponseInterface;
 use Svgta\OidcClient\OidcException as Exception;
-use Svgta\OidcLib\OidcSession;
+use Svgta\Lib\Session;
 
 class OidcRequest
 {
@@ -14,7 +14,7 @@ class OidcRequest
   public static $FI_config = null;
   private $session = null;
 
-  public function __construct(?string $welcomeUrl = null, OidcSession $session){
+  public function __construct(?string $welcomeUrl = null, Session $session){
     $this->welcomeUrl = $welcomeUrl;
     $this->client = new Client();
     $this->session = $session;

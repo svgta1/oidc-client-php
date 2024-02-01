@@ -1,9 +1,9 @@
 <?php
 namespace Svgta\OidcClient;
 use Svgta\OidcClient\OidcException as Exception;
-use Svgta\OidcLib\OidcUtils;
-use Svgta\OidcLib\OidcKeys;
-use Svgta\OidcLib\OidcSession;
+use Svgta\Lib\Utils;
+use Svgta\Lib\Keys;
+use Svgta\Lib\Session;
 
 class init
 {
@@ -16,14 +16,14 @@ class init
   const SESSION_NAME = "SvgtaOidcClient";
 
   public static function setLogLevel(int $level){
-    OidcUtils::setLogLevel($level);
+    Utils::setLogLevel($level);
   }
 
   public function __construct(?string $welcomeUrl = null, ?string $client_id = null, ?string $client_secret = null)
   {
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['welcomeUrl'=> $welcomeUrl]);
-    OidcSession::setSessionName(self::SESSION_NAME);
-    $this->session = new OidcSession();
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['welcomeUrl'=> $welcomeUrl]);
+    Session::setSessionName(self::SESSION_NAME);
+    $this->session = new Session();
     $this->session->delete('FI_PARAMS');
     $this->welcomeUrl = $welcomeUrl;
     if(!is_null($client_id))
@@ -33,13 +33,13 @@ class init
     $this->request = new OidcRequest($welcomeUrl, $this->session);
   }
 
-  public function keysManager(): OidcKeys{
+  public function keysManager(): Keys{
     $this->request->ctrlParams();
-    return new OidcKeys();
+    return new Keys();
   }
 
   public function setSessionKey(string $key){
-    OidcSession::setSessionKey($key);
+    Session::setSessionKey($key);
     $this->request->ctrlParams();
   }
 
@@ -54,27 +54,27 @@ class init
     else
       $logValue = $value;
     $this->request->ctrlParams();
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['key' => $key, 'value' => $logValue]);
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['key' => $key, 'value' => $logValue]);
     $fi_params = $this->session->get('FI_PARAMS');
     $fi_params->{$key} = $value;
     $this->session->put('FI_PARAMS', $fi_params);
   }
   public function client_id(string $client_id): void{
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['client_id' => $client_id]);
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['client_id' => $client_id]);
     $this->client_id = $client_id;
   }
   public function client_secret(string $client_secret): void{
     $this->client_secret = $client_secret;
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, ['client_secret' => 'not loggable info']);
+    Utils::setDebug(__CLASS__, __FUNCTION__, ['client_secret' => 'not loggable info']);
     $keyLen = mb_strlen($client_secret, '8bit');
     if($keyLen < 32)
-      OidcUtils::log(LOG_WARNING, 'The client_secret is to small to verify HS256 signature');
+      Utils::log(LOG_WARNING, 'The client_secret is to small to verify HS256 signature');
     if($keyLen < 48)
-      OidcUtils::log(LOG_WARNING, 'The client_secret is to small to verify HS384 signature');
+      Utils::log(LOG_WARNING, 'The client_secret is to small to verify HS384 signature');
     if($keyLen < 64)
-      OidcUtils::log(LOG_WARNING, 'The client_secret is to small to verify HS512 signature');
-    $oidcKeys = new OidcKeys();
-    $oidcKeys
+      Utils::log(LOG_WARNING, 'The client_secret is to small to verify HS512 signature');
+    $Keys = new Keys();
+    $Keys
       ->use_for_encDec()
       ->set_kid('client_secret')
       ->set_secret_key($this->client_secret)
@@ -90,7 +90,7 @@ class init
   }
   public function token(array $request = []): OidcTokens{
     $this->request->ctrlParams();
-    $req = OidcUtils::getRequest($request);
+    $req = Utils::getRequest($request);
     return new OidcTokens($req, $this->client_id, $this->request, $this->client_secret, $this->session);
   }
   public function userInfo(?string $access_token = null, ?string $id_token = null): array{

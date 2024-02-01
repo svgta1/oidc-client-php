@@ -3,10 +3,10 @@
 By default, the key generated is 512 bits long. You can change it if needed.
 
 ```php
-use Svgta\OidcLib\OidcUtils;
-$key_1 = OidcUtils::randomString();
-$key_2 = OidcUtils::randomString(1024);
-$key_3 = OidcUtils::randomString(64);
+use Svgta\Lib\Utils;
+$key_1 = Utils::randomString();
+$key_2 = Utils::randomString(1024);
+$key_3 = Utils::randomString(64);
 ```
 
 **Response**

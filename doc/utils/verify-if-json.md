@@ -3,10 +3,10 @@
 You can veritfy if a string is a json. The response is a boolean.
 
 ```php
-use Svgta\OidcLib\OidcUtils;
+use Svgta\Lib\Utils;
 
-$isJson = Oidcutils::isJson('My string');
+$isJson = Utils::isJson('My string');
 // false;
-$isJson = Oidcutils::isJson('{"key": "first", "value": "test"}');
+$isJson = Utils::isJson('{"key": "first", "value": "test"}');
 // true;
 ```

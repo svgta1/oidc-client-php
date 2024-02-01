@@ -1,8 +1,8 @@
 <?php
 namespace Svgta\OidcClient;
 use Svgta\OidcClient\OidcException as Exception;
-use Svgta\OidcLib\OidcSession;
-use Svgta\OidcLib\OidcUtils;
+use Svgta\Lib\Session;
+use Svgta\Lib\Utils;
 
 class OidcAuthorization
 {
@@ -75,8 +75,8 @@ class OidcAuthorization
   private $state = null;
   private $nonce = null;
 
-  public function __construct(string $client_id, OidcRequest $request, string $redirectUri, OidcSession $session){
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, [
+  public function __construct(string $client_id, OidcRequest $request, string $redirectUri, Session $session){
+    Utils::setDebug(__CLASS__, __FUNCTION__, [
       'client_id'=> $client_id,
       'redirectUri' => $redirectUri,
     ]);
@@ -100,7 +100,7 @@ class OidcAuthorization
     $params = $this->lightUriParams($this->uriParams());
     $uri = $this->endpoint . '?' . http_build_query($params);
     $this->session->put('flowType', $this->flowType);
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, [
+    Utils::setDebug(__CLASS__, __FUNCTION__, [
       'uri' => $uri,
       'params' => $params,
     ]);
@@ -150,10 +150,10 @@ class OidcAuthorization
     return $params;
   }
   public function set_state(): void{
-    $this->state = OidcUtils::randomString();
+    $this->state = Utils::randomString();
   }
   public function set_nonce(): void{
-    $this->nonce = OidcUtils::randomString();
+    $this->nonce = Utils::randomString();
   }
   public function set_code_challenge_method(string $method): void{
     $fi_config = $this->session->get('FI_PARAMS');
@@ -164,14 +164,14 @@ class OidcAuthorization
       throw new Exception('Code challenge method not supported by the OP');
     if(!in_array($method, self::$code_challenge_methods))
       throw new Exception('Code challenge method not supported');
-    $code = OidcUtils::randomString();
+    $code = Utils::randomString();
     $this->session->put('code_verifier', $code);
     switch($method){
       case 'plain':
         $code_challenge = $code;
         break;
       case 'S256':
-        $code_challenge = OidcUtils::base64url_encode(hash('sha256', $code, true));
+        $code_challenge = Utils::base64url_encode(hash('sha256', $code, true));
         break;
     }
     $this->code_challenge = $code_challenge;

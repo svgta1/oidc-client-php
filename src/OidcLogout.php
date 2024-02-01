@@ -1,8 +1,8 @@
 <?php
 namespace Svgta\OidcClient;
 use Svgta\OidcClient\OidcException as Exception;
-use Svgta\OidcLib\OidcSession;
-use Svgta\OidcLib\OidcUtils;
+use Svgta\Lib\Session;
+use Svgta\Lib\Utils;
 
 class OidcLogout
 {
@@ -10,7 +10,7 @@ class OidcLogout
   private $redirect_uri = null;
   private $session = null;
 
-  public function __construct(?string $id_token = null, ?string $redirect_uri = null, OidcSession $session){
+  public function __construct(?string $id_token = null, ?string $redirect_uri = null, Session $session){
     $this->session = $session;
     if(!is_null($id_token))
       if(!is_string($id_token))
@@ -27,7 +27,7 @@ class OidcLogout
     $this->redirect_uri = $redirect_uri;
   }
   public function doLogout(): void{
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__);
+    Utils::setDebug(__CLASS__, __FUNCTION__);
     $logoutUri = $this->getLogoutUri();
     $this->session->clear();
     header('Location: ' . $logoutUri);
@@ -41,7 +41,7 @@ class OidcLogout
       $param['id_token_hint'] = $this->id_token;
     if(!is_null($this->redirect_uri))
       $param['post_logout_redirect_uri'] = $this->redirect_uri;
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, [
+    Utils::setDebug(__CLASS__, __FUNCTION__, [
       'id_token' => $this->id_token,
       'redirect_uri' => $this->redirect_uri
     ]);

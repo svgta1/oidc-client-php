@@ -5,14 +5,14 @@ You can use openssl if you prefer. The library offers you the possibility to gen
 **With the library :**
 
 ```php
-use Svgta\OidcLib\OidcUtils;
+use Svgta\Lib\Utils;
 // RSA
-  $RsaKey = OidcUtils::genRSAKey();
-  // default 2048 length. To change length : Svgta\OidcUtils::genRSAKey(4096);
+  $RsaKey = Utils::genRSAKey();
+  // default 2048 length. To change length : Svgta\Utils::genRSAKey(4096);
 
 // EC
-  $ECKey = OidcUtils::genEcKey();
-  // default curve P-256. To change curve : Svgta\OidcUtils::genEcKey('P-521');
+  $ECKey = Utils::genEcKey();
+  // default curve P-256. To change curve : Svgta\Utils::genEcKey('P-521');
 ```
 
 The result is an array given the private and public key in two formats :

@@ -3,8 +3,8 @@
 
 
 ```php
-use Svgta\OidcLib\OidcUtils;
-$uuid = OidcUtils::genUUID();
+use Svgta\Lib\Utils;
+$uuid = Utils::genUUID();
 ```
 
 **Response**

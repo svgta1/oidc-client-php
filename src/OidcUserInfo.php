@@ -1,14 +1,14 @@
 <?php
 namespace Svgta\OidcClient;
 use Svgta\OidcClient\OidcException as Exception;
-use Svgta\OidcLib\OidcSession;
-use Svgta\OidcLib\OidcUtils;
-use Svgta\OidcLib\OidcJWTVerifyTrait;
-use Svgta\OidcLib\OidcJWT;
+use Svgta\Lib\Session;
+use Svgta\Lib\Utils;
+use Svgta\Lib\JWTVerifyTrait;
+use Svgta\Lib\JWT;
 
 class OidcUserInfo
 {
-  use OidcJWTVerifyTrait;
+  use JWTVerifyTrait;
   private $session = null;
   private $request = null;
   private $access_token = null;
@@ -16,8 +16,8 @@ class OidcUserInfo
   private $client_id = null;
   private $client_secret = null;
 
-  public function __construct(string $client_id, OidcRequest $request, ?string $access_token = null, ?string $id_token = null, OidcSession $session, ?string $client_secret = null){
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__);
+  public function __construct(string $client_id, OidcRequest $request, ?string $access_token = null, ?string $id_token = null, Session $session, ?string $client_secret = null){
+    Utils::setDebug(__CLASS__, __FUNCTION__);
     $this->session = $session;
     if(!is_null($access_token) && !is_string($access_token))
       throw new Exception('Bad access_token type');
@@ -42,7 +42,7 @@ class OidcUserInfo
   }
 
   private function get_JWT_info($jwt): array{
-    $header = OidcJWT::getJWTHeader($jwt);
+    $header = JWT::getJWTHeader($jwt);
     if(isset($header['enc'])){
       try{
         $nested = $this->ctrlJWT_nested($jwt);
@@ -54,7 +54,7 @@ class OidcUserInfo
       }
 
     }else{
-      $parse = OidcJWT::parseJWS($jwt);
+      $parse = JWT::parseJWS($jwt);
       $payload = $parse['payload'];
       $alg = $parse['header']['alg'];
       $this->ctrlJWT_sign($parse['ressource'], $alg, $jwt);
@@ -82,7 +82,7 @@ class OidcUserInfo
         throw new Exception('sub claim required in userInfo response');
       if($ctrlSub && ($res['sub'] != $subId))
         throw new Exception('Bad sub value');
-      OidcUtils::setDebug(__CLASS__, __FUNCTION__, $res);
+      Utils::setDebug(__CLASS__, __FUNCTION__, $res);
       return $res;
     }
 
@@ -101,7 +101,7 @@ class OidcUserInfo
     $this->ctrlJWT_iss($payload);
     $this->ctrlJWT_aud($payload);
 
-    OidcUtils::setDebug(__CLASS__, __FUNCTION__, $payload);
+    Utils::setDebug(__CLASS__, __FUNCTION__, $payload);
     return $payload;
   }
 }
